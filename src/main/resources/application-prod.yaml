@@ -1,0 +1,30 @@
+server:
+  port: ${SERVER_PORT}
+
+spring:
+  jackson:
+    date-format: dd/MM/yyyy
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  datasource:
+    url: ${DATASOURCE_URL}
+    username: ${DATASOURCE_USERNAME}
+    password: ${DATASOURCE_PASSWORD}
+    hikari:
+      schema: public
+    driver-class-name: org.postgresql.Driver
+
+jwt:
+  secret: ${JWT_SECERET}
+  expiration: ${JWT_EXPIRATION}
+
+logging:
+  level:
+    com.kinapi: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
