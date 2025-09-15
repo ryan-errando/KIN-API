@@ -7,12 +7,12 @@ import com.kinapi.common.entity.BaseResponse;
 import com.kinapi.common.entity.Users;
 import com.kinapi.common.repository.UserRepository;
 import com.kinapi.common.util.JwtUtil;
+import com.kinapi.common.util.UserAuthHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -27,6 +27,7 @@ public class UserService {
     private final AuthenticationManager authenticationManager;
 
     public BaseResponse addUser(UserRegisterDto userRegisterDto) {
+        log.debug("[addUser] Adding new user...\n \nname: {}\nemail: {}", userRegisterDto.getName(), userRegisterDto.getEmail());
         Users checkUser = userRepository.findByEmail(userRegisterDto.getEmail()).orElse(null);
         if(checkUser == null){
             Users user = Users.builder()
@@ -43,6 +44,7 @@ public class UserService {
                     .data(user)
                     .build();
         } else {
+            log.error("[addUser] Failed to add new user");
             return BaseResponse.builder()
                     .code(HttpStatus.CONFLICT)
                     .status(HttpStatus.CONFLICT.value())
@@ -85,9 +87,7 @@ public class UserService {
 
     public BaseResponse getUserProfile() {
         try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String email = authentication.getName();
-            Users user = userRepository.findByEmail(email).orElse(null);
+            Users user = UserAuthHelper.getUser();
 
             if (user != null) {
                 user.setPassword(null);

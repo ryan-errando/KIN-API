@@ -6,6 +6,7 @@ import com.kinapi.common.entity.TopicHistory;
 import com.kinapi.common.entity.Users;
 import com.kinapi.common.repository.TopicHistoryRepository;
 import com.kinapi.common.repository.UserRepository;
+import com.kinapi.common.util.UserAuthHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -23,9 +24,7 @@ public class TopicHistoryService {
     private final UserRepository userRepository;
 
     public BaseResponse getAllTopicHistory() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
-        Users user = userRepository.findByEmail(email).orElse(null);
+        Users user = UserAuthHelper.getUser();
 
         List<TopicHistory> topicHistoryList = topicHistoryRepository.findByUserId(user.getId());
         List<TopicHistoryDto> topicHistoryResponseDtoList = topicHistoryList.stream()
@@ -45,9 +44,7 @@ public class TopicHistoryService {
 
     public BaseResponse addTopicHistory(List<TopicHistoryDto> topicHistoryDtos) {
         try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String email = authentication.getName();
-            Users user = userRepository.findByEmail(email).orElse(null);
+            Users user = UserAuthHelper.getUser();
 
             if(user == null) {throw new RuntimeException("User can't be found");}
 
