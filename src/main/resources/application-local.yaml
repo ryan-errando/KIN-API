@@ -24,3 +24,4 @@ jwt:
 logging:
   level:
     com.kinapi: DEBUG
+    root: INFO
