@@ -8,11 +8,8 @@ COPY mvnw.cmd .
 COPY pom.xml .
 COPY .mvn .mvn
 
-# Make Maven wrapper executable
-RUN chmod +x ./mvnw
-
-# Download dependencies
-RUN ./mvnw dependency:go-offline -B
+# Make Maven wrapper executable and download dependencies
+RUN chmod +x ./mvnw && ./mvnw dependency:go-offline -B
 
 # Copy source code
 COPY src src
