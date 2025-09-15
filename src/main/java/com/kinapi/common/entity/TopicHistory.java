@@ -35,9 +35,8 @@ public class TopicHistory implements Serializable {
     @JoinColumn(name = "user_id", nullable = false)
     private Users user;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "category_id", nullable = false)
-    private TopicCategory topicCategory;
+    @Column(name = "category")
+    private String category;
 
     @Column(name = "topic_text", columnDefinition = "TEXT")
     private String topicText;

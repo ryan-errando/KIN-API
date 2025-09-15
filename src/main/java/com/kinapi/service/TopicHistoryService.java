@@ -1,8 +1,8 @@
 package com.kinapi.service;
 
+import com.kinapi.common.dto.AddTopicHistoryDto;
 import com.kinapi.common.dto.TopicHistoryResponseDto;
 import com.kinapi.common.entity.BaseResponse;
-import com.kinapi.common.entity.TopicCategory;
 import com.kinapi.common.entity.TopicHistory;
 import com.kinapi.common.entity.Users;
 import com.kinapi.common.repository.TopicCategoryRepository;
@@ -31,7 +31,7 @@ public class TopicHistoryService {
         List<TopicHistoryResponseDto> topicHistoryResponseDtoList = topicHistoryList.stream()
                 .map(th -> TopicHistoryResponseDto.builder()
                         .topicText(th.getTopicText())
-                        .topicCategory(th.getTopicCategory().getCategory())
+                        .topicCategory(th.getCategory())
                         .build())
                 .toList();
         return BaseResponse.builder()
@@ -42,17 +42,16 @@ public class TopicHistoryService {
                 .build();
     }
 
-    public BaseResponse addTopicHistory(String text, UUID categoryId) {
+    public BaseResponse addTopicHistory(AddTopicHistoryDto addTopicHistoryDto) {
         try {
-            TopicCategory category = topicCategoryRepository.findById(categoryId).orElse(null);
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String email = authentication.getName();
             Users user = userRepository.findByEmail(email).orElse(null);
-            if(category == null && user == null) {throw new RuntimeException("Category and User is not found");}
+            if(addTopicHistoryDto == null || user == null) {throw new RuntimeException("Category or User is not valid or can't be found");}
             TopicHistory topicHistory = TopicHistory.builder()
-                    .topicCategory(category)
+                    .category(addTopicHistoryDto.getTopicCategory())
                     .user(user)
-                    .topicText(text)
+                    .topicText(addTopicHistoryDto.getTopicText())
                     .build();
             topicHistoryRepository.save(topicHistory);
             return BaseResponse.builder()

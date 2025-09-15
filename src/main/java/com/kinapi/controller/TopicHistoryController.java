@@ -1,5 +1,6 @@
 package com.kinapi.controller;
 
+import com.kinapi.common.dto.AddTopicHistoryDto;
 import com.kinapi.common.entity.BaseResponse;
 import com.kinapi.service.TopicHistoryService;
 import lombok.RequiredArgsConstructor;
@@ -26,10 +27,9 @@ public class TopicHistoryController {
 
     @PostMapping("/add-topic-history")
     public ResponseEntity<BaseResponse> addTopicHistory(
-            @RequestBody String topic,
-            @RequestParam UUID categoryId
+            @RequestBody AddTopicHistoryDto addTopicHistoryDto
     ){
-        BaseResponse response = topicHistoryService.addTopicHistory(topic, categoryId);
+        BaseResponse response = topicHistoryService.addTopicHistory(addTopicHistoryDto);
         return new ResponseEntity<>(response, response.code());
     }
 }
