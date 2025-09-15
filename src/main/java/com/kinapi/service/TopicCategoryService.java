@@ -17,6 +17,7 @@ public class TopicCategoryService {
     private final TopicCategoryRepository topicCategoryRepository;
 
     public BaseResponse getAllTopic() {
+        log.info("[TopicCategoryService] fetching all topic category..");
         List<TopicCategory> topicCategoryList = topicCategoryRepository.findAll();
         return BaseResponse.builder()
                 .code(HttpStatus.OK)

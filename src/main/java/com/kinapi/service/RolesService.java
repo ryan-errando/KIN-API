@@ -18,22 +18,13 @@ public class RolesService {
     private final RolesRepository rolesRepository;
 
     public BaseResponse getAllRoles(){
+        log.info("[RolesService] fetching all roles...");
         List<Roles> roles = rolesRepository.findAll();
         return BaseResponse.builder()
                 .status(HttpStatus.OK.value())
                 .code(HttpStatus.OK)
                 .data(roles)
                 .message("Successfully get all roles")
-                .build();
-    }
-
-    public BaseResponse test(){
-//        List<Roles> roles = rolesRepository.findAll();
-        return BaseResponse.builder()
-                .status(HttpStatus.OK.value())
-                .code(HttpStatus.OK)
-                .data(null)
-                .message("HALO TEST 123")
                 .build();
     }
 }

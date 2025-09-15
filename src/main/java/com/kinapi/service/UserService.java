@@ -27,7 +27,7 @@ public class UserService {
     private final AuthenticationManager authenticationManager;
 
     public BaseResponse addUser(UserRegisterDto userRegisterDto) {
-        log.debug("[addUser] Adding new user...\n \nname: {}\nemail: {}", userRegisterDto.getName(), userRegisterDto.getEmail());
+        log.debug("\n[addUser] Adding new user...\nname: {}\nemail: {}", userRegisterDto.getName(), userRegisterDto.getEmail());
         Users checkUser = userRepository.findByEmail(userRegisterDto.getEmail()).orElse(null);
         if(checkUser == null){
             Users user = Users.builder()
@@ -37,6 +37,7 @@ public class UserService {
                     .dob(userRegisterDto.getDob())
                     .build();
             userRepository.save(user);
+            log.info("[addUser] Successfully add a new user");
             return BaseResponse.builder()
                     .code(HttpStatus.CREATED)
                     .status(HttpStatus.CREATED.value())
@@ -56,6 +57,7 @@ public class UserService {
 
     public BaseResponse authenticateUser(LoginDto loginDto) {
         try {
+            log.info("[authenticateUser] Authenticating user with email: {}", loginDto.getEmail());
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             loginDto.getEmail(),
@@ -88,6 +90,7 @@ public class UserService {
     public BaseResponse getUserProfile() {
         try {
             Users user = UserAuthHelper.getUser();
+            log.info("[getUserProfile] Getting user profile for email: {}",  user.getEmail());
 
             if (user != null) {
                 user.setPassword(null);
@@ -106,6 +109,7 @@ public class UserService {
                         .build();
             }
         } catch (Exception e) {
+            log.error("[getUserProfile] Failed getting user profile due to: {}", e.getMessage(), e);
             return BaseResponse.builder()
                     .code(HttpStatus.INTERNAL_SERVER_ERROR)
                     .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -117,6 +121,7 @@ public class UserService {
 
     public BaseResponse logout() {
         try {
+            log.info("[logout] Logout user...");
             SecurityContextHolder.clearContext();
             return BaseResponse.builder()
                     .code(HttpStatus.OK)

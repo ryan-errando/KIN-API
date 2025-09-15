@@ -25,6 +25,7 @@ public class TopicHistoryService {
 
     public BaseResponse getAllTopicHistory() {
         Users user = UserAuthHelper.getUser();
+        log.info("[TopicHistoryService] Get all topic history for user with email: {}", user.getEmail());
 
         List<TopicHistory> topicHistoryList = topicHistoryRepository.findByUserId(user.getId());
         List<TopicHistoryDto> topicHistoryResponseDtoList = topicHistoryList.stream()
@@ -45,6 +46,7 @@ public class TopicHistoryService {
     public BaseResponse addTopicHistory(List<TopicHistoryDto> topicHistoryDtos) {
         try {
             Users user = UserAuthHelper.getUser();
+            log.info("\n[TopicHistoryService] Add topic history for user: {}", user.getEmail());
 
             if(user == null) {throw new RuntimeException("User can't be found");}
 
@@ -59,6 +61,7 @@ public class TopicHistoryService {
                         .isFavorite(item.getTopicIsFavorite())
                         .build();
                 topicHistoryRepository.save(topicHistory);
+                log.info("\n[TopicHistoryService] Add topic history...\nTopic: {}\nCategory: {}", item.getTopicText(), item.getTopicCategory());
             }
             return BaseResponse.builder()
                     .code(HttpStatus.OK)
@@ -66,6 +69,7 @@ public class TopicHistoryService {
                     .message("Added topic history successfully")
                     .build();
         }catch (Exception e){
+            log.error("[TopicHistoryService] Add topic history failed: {}", e.getMessage(), e);
             return BaseResponse.builder()
                     .code(HttpStatus.INTERNAL_SERVER_ERROR)
                     .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
