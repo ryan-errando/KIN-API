@@ -11,21 +11,19 @@ import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.type.SqlTypes;
 
 import java.io.Serializable;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 @Getter
 @Setter
 @Entity
-@Table(name = "users")
+@Table(name = "topic_history")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @DynamicInsert
 @DynamicUpdate
-public class Users implements Serializable {
+public class TopicHistory implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false)
@@ -33,20 +31,19 @@ public class Users implements Serializable {
     @UuidGenerator(style = UuidGenerator.Style.TIME)
     private UUID id;
 
-    @Column(name = "name")
-    private String name;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private Users user;
 
-    @Column(name = "email")
-    private String email;
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "category_id", nullable = false)
+    private TopicCategory topicCategory;
 
-    @Column(name = "password")
-    private String password;
+    @Column(name = "topic_text", columnDefinition = "TEXT")
+    private String topicText;
 
-    @Column(name = "dob")
-    private LocalDate dob;
-
-    @Column(name = "avatar_url", columnDefinition = "TEXT")
-    private String avatarUrl;
+    @Column(name = "is_favorite")
+    private Boolean isFavorite;
 
     @Column(name = "created_at")
     @CreationTimestamp
@@ -55,10 +52,4 @@ public class Users implements Serializable {
     @Column(name = "updated_at")
     @UpdateTimestamp
     private LocalDateTime updatedAt;
-
-    @Column(name = "is_in_group")
-    private Boolean isInGroup;
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<TopicHistory> topicHistories;
 }
