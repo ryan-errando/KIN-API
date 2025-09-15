@@ -27,7 +27,7 @@ public class UserService {
     private final AuthenticationManager authenticationManager;
 
     public BaseResponse addUser(UserRegisterDto userRegisterDto) {
-        Users checkUser = userRepository.findByEmail(userRegisterDto.getEmail());
+        Users checkUser = userRepository.findByEmail(userRegisterDto.getEmail()).orElse(null);
         if(checkUser == null){
             Users user = Users.builder()
                     .name(userRegisterDto.getName())
@@ -61,7 +61,7 @@ public class UserService {
                     )
             );
 
-            Users user = userRepository.findByEmail(loginDto.getEmail());
+            Users user = userRepository.findByEmail(loginDto.getEmail()).orElse(null);
             String jwtToken = jwtUtil.generateToken(user.getEmail());
 
             LoginResponseDto loginResponse = new LoginResponseDto(jwtToken, user.getEmail());
@@ -87,7 +87,7 @@ public class UserService {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String email = authentication.getName();
-            Users user = userRepository.findByEmail(email);
+            Users user = userRepository.findByEmail(email).orElse(null);
 
             if (user != null) {
                 user.setPassword(null);
