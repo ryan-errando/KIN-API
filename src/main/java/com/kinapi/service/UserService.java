@@ -114,4 +114,24 @@ public class UserService {
                     .build();
         }
     }
+
+    public BaseResponse logout() {
+        try {
+            SecurityContextHolder.clearContext();
+            return BaseResponse.builder()
+                    .code(HttpStatus.OK)
+                    .status(HttpStatus.OK.value())
+                    .message("Logout successful")
+                    .data(null)
+                    .build();
+        } catch (Exception e) {
+            log.error("Error during logout: {}", e.getMessage(), e);
+            return BaseResponse.builder()
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .message("Error during logout")
+                    .data(null)
+                    .build();
+        }
+    }
 }

@@ -38,4 +38,10 @@ public class UserController {
         return new ResponseEntity<>(response, response.code());
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<BaseResponse> logout() {
+        BaseResponse response = userService.logout();
+        return new ResponseEntity<>(response, response.code());
+    }
+
 }
