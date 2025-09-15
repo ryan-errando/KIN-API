@@ -6,9 +6,11 @@ import com.kinapi.common.entity.TopicHistory;
 import com.kinapi.common.entity.Users;
 import com.kinapi.common.repository.TopicHistoryRepository;
 import com.kinapi.common.repository.UserRepository;
+import com.kinapi.common.specification.TopicHistorySpecification;
 import com.kinapi.common.util.UserAuthHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,11 +25,15 @@ public class TopicHistoryService {
     private final TopicHistoryRepository topicHistoryRepository;
     private final UserRepository userRepository;
 
-    public BaseResponse getAllTopicHistory() {
+    public BaseResponse getAllTopicHistory(List<String> categories, Boolean favorite) {
         Users user = UserAuthHelper.getUser();
-        log.info("[TopicHistoryService] Get all topic history for user with email: {}", user.getEmail());
+        log.info("[TopicHistoryService] Get topic history for user: {} with categories: {} and favorite: {}", user.getEmail(), categories, favorite);
 
-        List<TopicHistory> topicHistoryList = topicHistoryRepository.findByUserId(user.getId());
+        Specification<TopicHistory> spec = TopicHistorySpecification.belongsToUser(user.getId())
+                .and(TopicHistorySpecification.hasCategories(categories))
+                .and(TopicHistorySpecification.isFavorite(favorite));
+
+        List<TopicHistory> topicHistoryList = topicHistoryRepository.findAll(spec);
         List<TopicHistoryDto> topicHistoryResponseDtoList = topicHistoryList.stream()
                 .map(th -> TopicHistoryDto.builder()
                         .topicText(th.getTopicText())

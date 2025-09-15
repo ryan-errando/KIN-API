@@ -20,8 +20,11 @@ public class TopicHistoryController {
     private final TopicHistoryService topicHistoryService;
 
     @GetMapping("/get-topic-history")
-    public ResponseEntity<BaseResponse> getTopicHistory(){
-        BaseResponse response = topicHistoryService.getAllTopicHistory();
+    public ResponseEntity<BaseResponse> getTopicHistory(
+            @RequestParam(required = false, name = "category") List<String> category,
+            @RequestParam(required = false, name = "favorite") Boolean favorite
+    ){
+        BaseResponse response = topicHistoryService.getAllTopicHistory(category, favorite);
         return new ResponseEntity<>(response, response.code());
     }
 
