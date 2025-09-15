@@ -1,13 +1,15 @@
 package com.kinapi.controller;
 
-import com.kinapi.common.dto.AddTopicHistoryDto;
+import com.kinapi.common.dto.TopicHistoryDto;
 import com.kinapi.common.entity.BaseResponse;
 import com.kinapi.service.TopicHistoryService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -17,19 +19,17 @@ import java.util.UUID;
 public class TopicHistoryController {
     private final TopicHistoryService topicHistoryService;
 
-    @GetMapping("/get-topic-history/{id}")
-    public ResponseEntity<BaseResponse> getTopicHistory(
-            @PathVariable UUID id
-    ){
-        BaseResponse response = topicHistoryService.getAllTopicHistory(id);
+    @GetMapping("/get-topic-history")
+    public ResponseEntity<BaseResponse> getTopicHistory(){
+        BaseResponse response = topicHistoryService.getAllTopicHistory();
         return new ResponseEntity<>(response, response.code());
     }
 
     @PostMapping("/add-topic-history")
     public ResponseEntity<BaseResponse> addTopicHistory(
-            @RequestBody AddTopicHistoryDto addTopicHistoryDto
+            @Valid @RequestBody List<TopicHistoryDto> topicHistoryDto
     ){
-        BaseResponse response = topicHistoryService.addTopicHistory(addTopicHistoryDto);
+        BaseResponse response = topicHistoryService.addTopicHistory(topicHistoryDto);
         return new ResponseEntity<>(response, response.code());
     }
 }

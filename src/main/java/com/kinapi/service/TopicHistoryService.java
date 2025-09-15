@@ -1,11 +1,9 @@
 package com.kinapi.service;
 
-import com.kinapi.common.dto.AddTopicHistoryDto;
-import com.kinapi.common.dto.TopicHistoryResponseDto;
+import com.kinapi.common.dto.TopicHistoryDto;
 import com.kinapi.common.entity.BaseResponse;
 import com.kinapi.common.entity.TopicHistory;
 import com.kinapi.common.entity.Users;
-import com.kinapi.common.repository.TopicCategoryRepository;
 import com.kinapi.common.repository.TopicHistoryRepository;
 import com.kinapi.common.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +14,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @Slf4j
@@ -24,14 +21,18 @@ import java.util.UUID;
 public class TopicHistoryService {
     private final TopicHistoryRepository topicHistoryRepository;
     private final UserRepository userRepository;
-    private final TopicCategoryRepository topicCategoryRepository;
 
-    public BaseResponse getAllTopicHistory(UUID id) {
-        List<TopicHistory> topicHistoryList = topicHistoryRepository.findByUserId(id);
-        List<TopicHistoryResponseDto> topicHistoryResponseDtoList = topicHistoryList.stream()
-                .map(th -> TopicHistoryResponseDto.builder()
+    public BaseResponse getAllTopicHistory() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        Users user = userRepository.findByEmail(email).orElse(null);
+
+        List<TopicHistory> topicHistoryList = topicHistoryRepository.findByUserId(user.getId());
+        List<TopicHistoryDto> topicHistoryResponseDtoList = topicHistoryList.stream()
+                .map(th -> TopicHistoryDto.builder()
                         .topicText(th.getTopicText())
                         .topicCategory(th.getCategory())
+                        .topicIsFavorite(th.getIsFavorite())
                         .build())
                 .toList();
         return BaseResponse.builder()
@@ -42,18 +43,26 @@ public class TopicHistoryService {
                 .build();
     }
 
-    public BaseResponse addTopicHistory(AddTopicHistoryDto addTopicHistoryDto) {
+    public BaseResponse addTopicHistory(List<TopicHistoryDto> topicHistoryDtos) {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String email = authentication.getName();
             Users user = userRepository.findByEmail(email).orElse(null);
-            if(addTopicHistoryDto == null || user == null) {throw new RuntimeException("Category or User is not valid or can't be found");}
-            TopicHistory topicHistory = TopicHistory.builder()
-                    .category(addTopicHistoryDto.getTopicCategory())
-                    .user(user)
-                    .topicText(addTopicHistoryDto.getTopicText())
-                    .build();
-            topicHistoryRepository.save(topicHistory);
+
+            if(user == null) {throw new RuntimeException("User can't be found");}
+
+            for (TopicHistoryDto item : topicHistoryDtos) {
+                if(item.getTopicCategory() == null || item.getTopicText() == null || item.getTopicIsFavorite() == null) {
+                    throw new RuntimeException("Request is not valid");
+                }
+                TopicHistory topicHistory = TopicHistory.builder()
+                        .category(item.getTopicCategory())
+                        .user(user)
+                        .topicText(item.getTopicText())
+                        .isFavorite(item.getTopicIsFavorite())
+                        .build();
+                topicHistoryRepository.save(topicHistory);
+            }
             return BaseResponse.builder()
                     .code(HttpStatus.OK)
                     .status(HttpStatus.OK.value())

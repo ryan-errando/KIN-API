@@ -14,9 +14,11 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AddTopicHistoryDto implements Serializable {
+public class TopicHistoryDto implements Serializable {
     @JsonProperty("topic_text")
     private String topicText;
     @JsonProperty("topic_category")
     private String topicCategory;
+    @JsonProperty("topic_is_favorite")
+    private Boolean topicIsFavorite;
 }
