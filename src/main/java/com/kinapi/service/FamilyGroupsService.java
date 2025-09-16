@@ -8,6 +8,7 @@ import com.kinapi.common.entity.FamilyMembers;
 import com.kinapi.common.entity.Users;
 import com.kinapi.common.repository.FamilyGroupsRepository;
 import com.kinapi.common.repository.FamilyMembersRepository;
+import com.kinapi.common.repository.UserRepository;
 import com.kinapi.common.util.UserAuthHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,7 @@ import java.util.List;
 public class FamilyGroupsService {
     private final FamilyGroupsRepository familyGroupsRepository;
     private final FamilyMembersRepository familyMembersRepository;
+    private final UserRepository userRepository;
 
     public BaseResponse createNewFamilyGroup(CreateFamilyGroupsDto createFamilyGroupsDto) {
         try{
@@ -57,6 +59,7 @@ public class FamilyGroupsService {
             familyMembersRepository.save(familyMembers);
 
             user.setIsInGroup(true);
+            userRepository.save(user);
 
             log.info("[createNewFamilyGroup] \"{}\" successfully created", familyGroups.getGroupName());
 
@@ -77,44 +80,6 @@ public class FamilyGroupsService {
         }
     }
 
-    public BaseResponse joinFamilyGroup(String invitationcode){
-        try{
-            Users user = UserAuthHelper.getUser();
-            if(user.getIsInGroup() == true){
-                throw new RuntimeException("User already in a family group");
-            }
-
-            FamilyGroups familyGroups = familyGroupsRepository.findByInvitationCode(invitationcode).orElse(null);
-            if(familyGroups == null){
-                throw new RuntimeException("No family group found for invitation code: " + invitationcode);
-            }
-
-            FamilyMembers familyMembers = FamilyMembers.builder()
-                    .user(user)
-                    .group(familyGroups)
-                    .build();
-            familyMembersRepository.save(familyMembers);
-
-            user.setIsInGroup(true);
-
-            log.info("[joinFamilyGroup] successfully joined \"{}\" family group", familyGroups.getGroupName());
-
-            return BaseResponse.builder()
-                    .status(HttpStatus.OK.value())
-                    .code(HttpStatus.OK)
-                    .message("Successfully joined family group")
-                    .build();
-
-        }catch (Exception e){
-            log.error("[joinFamilyGroup] Error joining family group: {}", e.getMessage(), e);
-            return BaseResponse.builder()
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .code(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .message(e.getMessage())
-                    .build();
-        }
-    }
-
     public BaseResponse getFamilyGroupDetail() {
         Users user = UserAuthHelper.getUser();
         FamilyGroups familyGroups = user.getFamilyMembers().getGroup();
@@ -125,6 +90,7 @@ public class FamilyGroupsService {
         for(FamilyMembers item : familyMembersList){
             memberList.add(
                     FamilyGroupDetailDto.FamilyMember.builder()
+                            .id(item.getId().toString())
                             .name(item.getUser().getName())
                             .email(item.getUser().getEmail())
                             .dob(item.getUser().getDob().toString())
@@ -147,6 +113,46 @@ public class FamilyGroupsService {
                 .message("Successfully get family group detail")
                 .data(response)
                 .build();
+    }
+
+    public BaseResponse deleteFamilyGroup() {
+        try{
+            Users user = UserAuthHelper.getUser();
+            FamilyGroups familyGroups = user.getFamilyGroups();
+
+            if(familyGroups != null){
+                List<FamilyMembers> allMembers = familyGroups.getFamilyMembers();
+                for(FamilyMembers member : allMembers) {
+                    Users memberUser = member.getUser();
+                    memberUser.setIsInGroup(false);
+                    memberUser.setFamilyMembers(null);
+                    if(memberUser.getFamilyGroups() != null) {
+                        memberUser.setFamilyGroups(null);
+                    }
+                    userRepository.save(memberUser);
+                    log.info("[deleteFamilyGroup] Deleting {} from the group", memberUser.getName());
+                }
+
+                log.info("[deleteFamilyGroup] Successfully deleted family group");
+                familyGroupsRepository.delete(familyGroups);
+            }else{
+                throw new RuntimeException("User is not the group creator");
+            }
+
+            return BaseResponse.builder()
+                    .status(HttpStatus.OK.value())
+                    .code(HttpStatus.OK)
+                    .message("Successfully deleted family group")
+                    .build();
+
+        }catch (Exception e){
+            log.error("[deleteFamilyGroup] Error deleting family group: {}", e.getMessage(), e);
+            return BaseResponse.builder()
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .message(e.getMessage())
+                    .build();
+        }
     }
 
     private static String generateInvitationCode(){

@@ -31,6 +31,8 @@ public class FamilyGroupDetailDto implements Serializable {
     @AllArgsConstructor
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class FamilyMember implements Serializable {
+        @JsonProperty("id")
+        private String id;
         @JsonProperty("name")
         private String name;
         @JsonProperty("email")
