@@ -64,4 +64,7 @@ public class Users implements Serializable {
 
     @OneToOne(mappedBy = "createdBy", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private FamilyGroups familyGroups;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private FamilyMembers familyMembers;
 }
