@@ -31,4 +31,10 @@ public class FamilyGroupsController {
         BaseResponse response = familyGroupsService.joinFamilyGroup(invitationCode);
         return new ResponseEntity<>(response, response.code());
     }
+
+    @GetMapping("/family-group-detail")
+    public ResponseEntity<BaseResponse> getFamilyGroupDetail(){
+        BaseResponse response = familyGroupsService.getFamilyGroupDetail();
+        return new ResponseEntity<>(response, response.code());
+    }
 }

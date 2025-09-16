@@ -1,6 +1,7 @@
 package com.kinapi.service;
 
 import com.kinapi.common.dto.CreateFamilyGroupsDto;
+import com.kinapi.common.dto.FamilyGroupDetailDto;
 import com.kinapi.common.entity.BaseResponse;
 import com.kinapi.common.entity.FamilyGroups;
 import com.kinapi.common.entity.FamilyMembers;
@@ -16,6 +17,8 @@ import org.springframework.util.ObjectUtils;
 
 import java.security.SecureRandom;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -110,6 +113,40 @@ public class FamilyGroupsService {
                     .message(e.getMessage())
                     .build();
         }
+    }
+
+    public BaseResponse getFamilyGroupDetail() {
+        Users user = UserAuthHelper.getUser();
+        FamilyGroups familyGroups = user.getFamilyMembers().getGroup();
+        List<FamilyMembers> familyMembersList = familyGroups.getFamilyMembers();
+
+        List<FamilyGroupDetailDto.FamilyMember> memberList = new ArrayList<>();
+
+        for(FamilyMembers item : familyMembersList){
+            memberList.add(
+                    FamilyGroupDetailDto.FamilyMember.builder()
+                            .name(item.getUser().getName())
+                            .email(item.getUser().getEmail())
+                            .dob(item.getUser().getDob().toString())
+                            .role(item.getRole())
+                            .groupCreator(ObjectUtils.isEmpty(item.getUser().getFamilyGroups()) ? false : true)
+                            .build()
+            );
+        }
+
+        FamilyGroupDetailDto response = FamilyGroupDetailDto.builder()
+                .familyGroupName(familyGroups.getGroupName())
+                .invitationCode(familyGroups.getInvitationCode())
+                .resetTime(familyGroups.getResetTime().toString())
+                .familyMemberList(memberList)
+                .build();
+
+        return BaseResponse.builder()
+                .status(HttpStatus.OK.value())
+                .code(HttpStatus.OK)
+                .message("Successfully get family group detail")
+                .data(response)
+                .build();
     }
 
     private static String generateInvitationCode(){
