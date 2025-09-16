@@ -1,11 +1,9 @@
 package com.kinapi.common.entity;
 
 import jakarta.persistence.*;
+import jakarta.persistence.Table;
 import lombok.*;
-import org.hibernate.annotations.DynamicInsert;
-import org.hibernate.annotations.DynamicUpdate;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.annotations.UuidGenerator;
+import org.hibernate.annotations.*;
 import org.hibernate.type.SqlTypes;
 
 import java.io.Serializable;
@@ -41,5 +39,6 @@ public class FamilyMembers implements Serializable {
     private String role;
 
     @Column(name = "joined_time")
+    @CreationTimestamp
     private LocalDateTime joinedTime;
 }

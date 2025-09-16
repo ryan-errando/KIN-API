@@ -23,4 +23,12 @@ public class FamilyGroupsController {
         BaseResponse response = familyGroupsService.createNewFamilyGroup(createFamilyGroupsDto);
         return new ResponseEntity<>(response, response.code());
     }
+
+    @PostMapping("/join-family-group")
+    public ResponseEntity<BaseResponse> joinFamilyGroup(
+        @RequestParam(name = "invitation_code") String invitationCode
+    ){
+        BaseResponse response = familyGroupsService.joinFamilyGroup(invitationCode);
+        return new ResponseEntity<>(response, response.code());
+    }
 }

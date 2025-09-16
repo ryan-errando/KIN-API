@@ -3,8 +3,10 @@ package com.kinapi.service;
 import com.kinapi.common.dto.CreateFamilyGroupsDto;
 import com.kinapi.common.entity.BaseResponse;
 import com.kinapi.common.entity.FamilyGroups;
+import com.kinapi.common.entity.FamilyMembers;
 import com.kinapi.common.entity.Users;
 import com.kinapi.common.repository.FamilyGroupsRepository;
+import com.kinapi.common.repository.FamilyMembersRepository;
 import com.kinapi.common.util.UserAuthHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,13 +22,14 @@ import java.time.LocalTime;
 @RequiredArgsConstructor
 public class FamilyGroupsService {
     private final FamilyGroupsRepository familyGroupsRepository;
+    private final FamilyMembersRepository familyMembersRepository;
 
     public BaseResponse createNewFamilyGroup(CreateFamilyGroupsDto createFamilyGroupsDto) {
         try{
             Users user = UserAuthHelper.getUser();
             log.info("[createNewFamilyGroup] Creating new family group for user with email: {}", user.getEmail());
 
-            if(user.getIsInGroup() != false){
+            if(user.getIsInGroup() == true){
                 throw new RuntimeException("User already in a family group");
             }
 
@@ -43,7 +46,16 @@ public class FamilyGroupsService {
                     .resetTime(ObjectUtils.isEmpty(createFamilyGroupsDto.getResetTime()) ? LocalTime.of(18, 0) : createFamilyGroupsDto.getResetTime())
                     .build();
             familyGroupsRepository.save(familyGroups);
-            log.info("[createNewFamilyGroup] {} successfully created", familyGroups.getGroupName());
+
+            FamilyMembers familyMembers = FamilyMembers.builder()
+                    .user(user)
+                    .group(familyGroups)
+                    .build();
+            familyMembersRepository.save(familyMembers);
+
+            user.setIsInGroup(true);
+
+            log.info("[createNewFamilyGroup] \"{}\" successfully created", familyGroups.getGroupName());
 
             return BaseResponse.builder()
                     .status(HttpStatus.OK.value())
@@ -54,6 +66,44 @@ public class FamilyGroupsService {
 
         }catch (Exception e){
             log.error("[createNewFamilyGroup] Error creating new family group: {}", e.getMessage(), e);
+            return BaseResponse.builder()
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .message(e.getMessage())
+                    .build();
+        }
+    }
+
+    public BaseResponse joinFamilyGroup(String invitationcode){
+        try{
+            Users user = UserAuthHelper.getUser();
+            if(user.getIsInGroup() == true){
+                throw new RuntimeException("User already in a family group");
+            }
+
+            FamilyGroups familyGroups = familyGroupsRepository.findByInvitationCode(invitationcode).orElse(null);
+            if(familyGroups == null){
+                throw new RuntimeException("No family group found for invitation code: " + invitationcode);
+            }
+
+            FamilyMembers familyMembers = FamilyMembers.builder()
+                    .user(user)
+                    .group(familyGroups)
+                    .build();
+            familyMembersRepository.save(familyMembers);
+
+            user.setIsInGroup(true);
+
+            log.info("[joinFamilyGroup] successfully joined \"{}\" family group", familyGroups.getGroupName());
+
+            return BaseResponse.builder()
+                    .status(HttpStatus.OK.value())
+                    .code(HttpStatus.OK)
+                    .message("Successfully joined family group")
+                    .build();
+
+        }catch (Exception e){
+            log.error("[joinFamilyGroup] Error joining family group: {}", e.getMessage(), e);
             return BaseResponse.builder()
                     .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .code(HttpStatus.INTERNAL_SERVER_ERROR)
