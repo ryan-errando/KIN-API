@@ -2,10 +2,12 @@ package com.kinapi.service;
 
 import com.kinapi.common.dto.LoginDto;
 import com.kinapi.common.dto.LoginResponseDto;
+import com.kinapi.common.dto.UserProfileDto;
 import com.kinapi.common.dto.UserRegisterDto;
 import com.kinapi.common.entity.BaseResponse;
 import com.kinapi.common.entity.Users;
 import com.kinapi.common.repository.UserRepository;
+import com.kinapi.common.util.DateHelper;
 import com.kinapi.common.util.JwtUtil;
 import com.kinapi.common.util.UserAuthHelper;
 import lombok.RequiredArgsConstructor;
@@ -93,12 +95,17 @@ public class UserService {
             log.info("[getUserProfile] Getting user profile for email: {}",  user.getEmail());
 
             if (user != null) {
-                user.setPassword(null);
                 return BaseResponse.builder()
                         .code(HttpStatus.OK)
                         .status(HttpStatus.OK.value())
                         .message("User profile retrieved successfully")
-                        .data(user)
+                        .data(UserProfileDto.builder()
+                                .userId(user.getId().toString())
+                                .email(user.getEmail())
+                                .name(user.getName())
+                                .dob(DateHelper.formatToddMMyyyy(user.getDob()))
+                                .avatarUrl(user.getAvatarUrl())
+                                .build())
                         .build();
             } else {
                 return BaseResponse.builder()
