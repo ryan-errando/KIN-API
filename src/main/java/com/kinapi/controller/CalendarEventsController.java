@@ -21,4 +21,14 @@ public class CalendarEventsController {
         BaseResponse response = calendarEventsService.getAllEvents();
         return new ResponseEntity<>(response, response.code());
     }
+
+    // TODO: IMPLEMENT PKE TRY CATCH -> BIAR TW KLO AD HIT ERROR DI API GABAKAL RUSAK DI FE
+    // create event -> buat dto baru CreateCalendarEventsDto copy structure aja biar formatnya sama
+
+    // update event -> pke PUT/POST mapping approach by UUID(event_id) trs create body tembak ke endpoint.
+    // find entity by id
+    // pake set buat ganti value
+    // save
+
+    // delete event -> lgsg pke repo delete by ID
 }
