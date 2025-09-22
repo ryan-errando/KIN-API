@@ -1,6 +1,7 @@
 package com.kinapi.common.entity;
 
 import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Table;
 import lombok.*;
 import org.hibernate.annotations.*;
@@ -8,6 +9,7 @@ import org.hibernate.type.SqlTypes;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -41,4 +43,7 @@ public class FamilyMembers implements Serializable {
     @Column(name = "joined_time")
     @CreationTimestamp
     private LocalDateTime joinedTime;
+
+    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<CalendarEvents> calendarEvents;
 }
