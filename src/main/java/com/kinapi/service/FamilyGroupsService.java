@@ -102,6 +102,7 @@ public class FamilyGroupsService {
 
         FamilyGroupDetailDto response = FamilyGroupDetailDto.builder()
                 .familyGroupName(familyGroups.getGroupName())
+                .familyGroupId(familyGroups.getId().toString())
                 .invitationCode(familyGroups.getInvitationCode())
                 .resetTime(familyGroups.getResetTime().toString())
                 .familyMemberList(memberList)
