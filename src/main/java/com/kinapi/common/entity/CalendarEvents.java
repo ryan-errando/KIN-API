@@ -46,9 +46,9 @@ public class CalendarEvents implements Serializable {
     @Column(name = "end_time")
     private LocalDateTime endTime;
 
-    @Column(name = "all_day")
+    @Column(name = "is_completed")
     @Builder.Default
-    private Boolean allDay = false;
+    private Boolean isCompleted = false;
 
     @Column(name = "event_type")
     private String eventType;
