@@ -17,4 +17,6 @@ import java.util.UUID;
 public class SetCalendarEventCompletedDto {
     @JsonProperty("event_id")
     private UUID eventId;
+    @JsonProperty("is_complete")
+    private Boolean isComplete;
 }
