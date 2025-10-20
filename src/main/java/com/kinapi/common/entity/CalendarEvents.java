@@ -53,9 +53,6 @@ public class CalendarEvents implements Serializable {
     @Column(name = "event_type")
     private String eventType;
 
-    @Column(name = "color")
-    private String color;
-
     @Column(name = "created_at")
     @CreationTimestamp
     private LocalDateTime createdAt;

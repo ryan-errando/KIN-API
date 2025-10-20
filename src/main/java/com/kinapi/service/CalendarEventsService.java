@@ -43,7 +43,6 @@ public class CalendarEventsService {
                         .endTime(event.getEndTime().toString())
                         .allDay(event.getAllDay())
                         .eventType(event.getEventType())
-                        .color(event.getColor())
                         .priorityLevel(event.getPriorityLevel())
                         .build());
             }
