@@ -54,7 +54,6 @@ public class CalendarEventsService {
                             .endTime(event.getEndTime())
                             .isCompleted(event.getIsCompleted())
                             .eventType(event.getEventType())
-                            .color(event.getColor())
                             .priorityLevel(event.getPriorityLevel())
                             .build());
                 }
@@ -98,7 +97,6 @@ public class CalendarEventsService {
                     .startTime(addCalendarEventsDto.getStartTime())
                     .endTime(addCalendarEventsDto.getEndTime())
                     .eventType(addCalendarEventsDto.getEventType())
-                    .color(addCalendarEventsDto.getColor())
                     .priorityLevel(addCalendarEventsDto.getPriorityLevel())
                     .build();
 
