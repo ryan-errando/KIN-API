@@ -1,9 +1,6 @@
 package com.kinapi.service;
 
-import com.kinapi.common.dto.LoginDto;
-import com.kinapi.common.dto.LoginResponseDto;
-import com.kinapi.common.dto.UserProfileDto;
-import com.kinapi.common.dto.UserRegisterDto;
+import com.kinapi.common.dto.*;
 import com.kinapi.common.entity.BaseResponse;
 import com.kinapi.common.entity.Users;
 import com.kinapi.common.repository.UserRepository;
@@ -105,6 +102,7 @@ public class UserService {
                                 .name(user.getName())
                                 .dob(DateHelper.formatToddMMyyyy(user.getDob()))
                                 .avatarUrl(user.getAvatarUrl())
+                                .isInGroup(user.getIsInGroup())
                                 .build())
                         .build();
             } else {
@@ -143,6 +141,38 @@ public class UserService {
                     .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .message("Error during logout")
                     .data(null)
+                    .build();
+        }
+    }
+
+    public BaseResponse updateProfile(UpdateUserProfileDto updateUserProfileDto) {
+        try{
+            log.info("[updateProfile] Updating user profile...");
+            Users user = UserAuthHelper.getUser();
+
+            if(user == null){
+                throw new Exception("User is null");
+            }
+
+            if(updateUserProfileDto.getName() != null && !updateUserProfileDto.getName().trim().isEmpty()){
+                user.setName(updateUserProfileDto.getName().trim());
+            }
+            if(updateUserProfileDto.getDob() != null){
+                user.setDob(updateUserProfileDto.getDob());
+            }
+            userRepository.save(user);
+
+            return BaseResponse.builder()
+                    .status(HttpStatus.OK.value())
+                    .code(HttpStatus.OK)
+                    .message("User profile updated successfully")
+                    .build();
+        } catch (Exception e) {
+            log.error("Error updating user profile: {}", e.getMessage(), e);
+            return BaseResponse.builder()
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .message("Error during profile update")
                     .build();
         }
     }

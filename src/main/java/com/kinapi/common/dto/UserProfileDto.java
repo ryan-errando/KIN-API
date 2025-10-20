@@ -25,4 +25,6 @@ public class UserProfileDto implements Serializable {
     private String dob;
     @JsonProperty("avatar_url")
     private String avatarUrl;
+    @JsonProperty("is_in_group")
+    private Boolean isInGroup;
 }
