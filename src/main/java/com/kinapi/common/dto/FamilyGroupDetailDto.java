@@ -18,6 +18,8 @@ import java.util.List;
 public class FamilyGroupDetailDto implements Serializable {
     @JsonProperty("family_group_name")
     private String familyGroupName;
+    @JsonProperty("family_group_id")
+    private String familyGroupId;
     @JsonProperty("invitation_code")
     private String invitationCode;
     @JsonProperty("reset_time")
