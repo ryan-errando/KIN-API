@@ -8,6 +8,7 @@ import com.kinapi.common.repository.TopicHistoryRepository;
 import com.kinapi.common.repository.UserRepository;
 import com.kinapi.common.specification.TopicHistorySpecification;
 import com.kinapi.common.util.UserAuthHelper;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
@@ -49,6 +50,7 @@ public class TopicHistoryService {
                 .build();
     }
 
+//    @Transactional(rollbackOn =  Exception.class) // TAMBAHIN INI BUAT PROSES SAVING DATA KE DB ATOPUN PROSES MODIFY
     public BaseResponse addTopicHistory(List<TopicHistoryDto> topicHistoryDtos) {
         try {
             Users user = UserAuthHelper.getUser();
