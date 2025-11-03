@@ -37,4 +37,10 @@ public class FamilyMembersController {
         BaseResponse response = familyMembersService.removeFamilyMember(familyMemberId);
         return new ResponseEntity<>(response, response.code());
     }
+
+    @GetMapping("/family-member-name-list")
+    public ResponseEntity<BaseResponse> getFamilyMemberNameList(){
+        BaseResponse response = familyMembersService.getFamilyMemberNameList();
+        return new ResponseEntity<>(response, response.code());
+    }
 }
