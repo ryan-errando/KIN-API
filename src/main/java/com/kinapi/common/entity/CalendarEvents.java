@@ -63,4 +63,7 @@ public class CalendarEvents implements Serializable {
 
     @Column(name = "priority_level")
     private Integer priorityLevel;
+
+    @Column(name = "assigned_to")
+    private String assignedTo;
 }
