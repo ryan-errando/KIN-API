@@ -21,6 +21,11 @@ jwt:
   secret: ${JWT_SECERET}
   expiration: ${JWT_EXPIRATION}
 
+openai:
+  api:
+    key: ${OPENAI_API_KEY}
+    url: https://api.openai.com/v1
+
 logging:
   level:
     com.kinapi: DEBUG
