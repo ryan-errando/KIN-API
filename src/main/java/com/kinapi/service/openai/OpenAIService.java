@@ -1,4 +1,4 @@
-package com.kinapi.service.OpenAI;
+package com.kinapi.service.openai;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;

@@ -2,7 +2,6 @@ package com.kinapi.controller;
 
 import com.kinapi.common.entity.BaseResponse;
 import com.kinapi.service.FamilyDailyQuestionService;
-import com.kinapi.service.OpenAI.OpenAIService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -16,13 +15,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class FamilyDailyQuestionController {
     private final FamilyDailyQuestionService familyDailyQuestionService;
-    private final OpenAIService openAIService;
 
     @GetMapping("/get-family-daily-questions")
     public ResponseEntity<BaseResponse> getFamilyDailyQuestions() {
         BaseResponse response = familyDailyQuestionService.getFamilyDailyQuestions();
         return new ResponseEntity<>(response, response.code());
     }
-
 
 }
