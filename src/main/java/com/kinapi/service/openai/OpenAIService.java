@@ -24,7 +24,7 @@ public class OpenAIService {
     private static final String GPT_4O_MINI = "gpt-4o-mini";
 
     public OpenAIService(
-            @Value("${openai.api.key}") String apiKey,
+            @Value("${openai.api.token}") String apiKey,
             @Value("${openai.api.url}") String apiUrl
     ) {
         this.openAIWebClient = WebClient.builder()

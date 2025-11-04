@@ -23,7 +23,7 @@ jwt:
 
 openai:
   api:
-    key: ganti-pake-key-masing-masing
+    token: ganti-pake-key-masing-masing
     url: https://api.openai.com/v1
 
 logging:
