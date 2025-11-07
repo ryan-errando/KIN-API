@@ -47,7 +47,6 @@ public class FamilyMembers implements Serializable {
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<CalendarEvents> calendarEvents;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "questionResponse_id")
-    private QuestionResponse questionResponse;
+    @OneToMany(mappedBy = "familyMembers", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<DailyQuestionResponse> dailyQuestionResponses;
 }

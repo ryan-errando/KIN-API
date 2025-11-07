@@ -3,6 +3,7 @@ package com.kinapi.controller;
 import com.kinapi.common.dto.AddCalendarEventsDto;
 import com.kinapi.common.dto.CalendarEventsDto;
 import com.kinapi.common.dto.SetCalendarEventCompletedDto;
+import com.kinapi.common.dto.UpdateCalendarEventsDto;
 import com.kinapi.common.entity.BaseResponse;
 import com.kinapi.service.CalendarEventsService;
 import jakarta.validation.Valid;
@@ -35,6 +36,14 @@ public class CalendarEventsController {
             @Valid @RequestBody AddCalendarEventsDto addCalendarEventsDto
     ) {
         BaseResponse response = calendarEventsService.addEvent(addCalendarEventsDto);
+        return new ResponseEntity<>(response, response.code());
+    }
+
+    @PutMapping("/update-event")
+    public ResponseEntity<BaseResponse> updateCalendarEvent(
+            @Valid @RequestBody UpdateCalendarEventsDto updateCalendarEventsDto
+    ){
+        BaseResponse response = calendarEventsService.updateCalendarEventsDto(updateCalendarEventsDto);
         return new ResponseEntity<>(response, response.code());
     }
 

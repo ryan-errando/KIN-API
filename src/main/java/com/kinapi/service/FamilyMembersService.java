@@ -13,6 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -125,5 +127,31 @@ public class FamilyMembersService {
                     .message(e.getMessage())
                     .build();
         }
+    }
+
+    public BaseResponse getFamilyMemberNameList() {
+        Users user = UserAuthHelper.getUser();
+        if(user.getFamilyMembers() == null){
+            log.info("[getFamilyMemberNameList] User is not the group");
+            return BaseResponse.builder()
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .message("No family member name list found, user is not in a group!")
+                    .build();
+        }
+
+        log.info("[getFamilyMemberNameList] Fetching family member name list");
+        FamilyGroups familyGroups = user.getFamilyMembers().getGroup();
+        List<FamilyMembers> familyMembers = familyGroups.getFamilyMembers();
+        List<String> familyMemberName = familyMembers.stream().filter(Objects::nonNull)
+                .map(member -> member.getUser().getName())
+                .toList();
+
+        return BaseResponse.builder()
+                .status(HttpStatus.OK.value())
+                .code(HttpStatus.OK)
+                .data(familyMemberName)
+                .message("Successfully retrieved family member names")
+                .build();
     }
 }

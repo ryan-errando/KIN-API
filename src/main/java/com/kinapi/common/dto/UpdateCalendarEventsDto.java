@@ -8,15 +8,17 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AddCalendarEventsDto implements Serializable {
+public class UpdateCalendarEventsDto {
+    @JsonProperty("id")
+    private UUID id = null;
     @JsonProperty("title")
     private String title;
     @JsonProperty("description")

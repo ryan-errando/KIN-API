@@ -56,4 +56,7 @@ public class CalendarEventsDto implements Serializable {
 
     @JsonProperty("priority_level")
     private Integer priorityLevel;
+
+    @JsonProperty("assigned_to")
+    private String assignedTo;
 }

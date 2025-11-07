@@ -3,6 +3,7 @@ package com.kinapi.service;
 import com.kinapi.common.dto.AddCalendarEventsDto;
 import com.kinapi.common.dto.CalendarEventsDto;
 import com.kinapi.common.dto.SetCalendarEventCompletedDto;
+import com.kinapi.common.dto.UpdateCalendarEventsDto;
 import com.kinapi.common.entity.BaseResponse;
 import com.kinapi.common.entity.CalendarEvents;
 import com.kinapi.common.entity.FamilyMembers;
@@ -16,6 +17,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -55,6 +57,7 @@ public class CalendarEventsService {
                             .isCompleted(event.getIsCompleted())
                             .eventType(event.getEventType())
                             .priorityLevel(event.getPriorityLevel())
+                            .assignedTo(event.getAssignedTo())
                             .build());
                 }
 
@@ -98,6 +101,7 @@ public class CalendarEventsService {
                     .endTime(addCalendarEventsDto.getEndTime())
                     .eventType(addCalendarEventsDto.getEventType())
                     .priorityLevel(addCalendarEventsDto.getPriorityLevel())
+                    .assignedTo(addCalendarEventsDto.getAssignedTo())
                     .build();
 
             calendarEventsRepository.save(calendarEvent);
@@ -153,6 +157,46 @@ public class CalendarEventsService {
                     .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .code(HttpStatus.INTERNAL_SERVER_ERROR)
                     .message(e.getMessage())
+                    .build();
+        }
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResponse updateCalendarEventsDto(UpdateCalendarEventsDto requestDto) {
+        try{
+            log.info("[updateCalendarEventsDto] Updating calendar event");
+            Optional<CalendarEvents> eventsOptional = calendarEventsRepository.findById(requestDto.getId());
+
+            if(eventsOptional.isEmpty()){
+                throw new Exception("Calendar events is not found");
+            }
+
+            CalendarEvents events = eventsOptional.get();
+
+            events.setTitle(requestDto.getTitle());
+            events.setDescription(requestDto.getDescription());
+            events.setLocation(requestDto.getLocation());
+            events.setStartTime(requestDto.getStartTime());
+            events.setEndTime(requestDto.getEndTime());
+            events.setEventType(requestDto.getEventType());
+            events.setPriorityLevel(requestDto.getPriorityLevel());
+            events.setAssignedTo(requestDto.getAssignedTo());
+
+            calendarEventsRepository.save(events);
+
+            log.info("[updateCalendarEventsDto] Calendar event updated successfully");
+            return BaseResponse.builder()
+                    .status(HttpStatus.OK.value())
+                    .code(HttpStatus.OK)
+                    .message("Successfully updated event")
+                    .build();
+
+        }catch (Exception e){
+            log.error("[updateCalendarEventsDto] Failed to update calendar events: {}", e.getMessage());
+            return BaseResponse.builder()
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .message("Failed updating event: " + e.getMessage())
                     .build();
         }
     }

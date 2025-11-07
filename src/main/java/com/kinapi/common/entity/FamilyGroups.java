@@ -54,7 +54,7 @@ public class FamilyGroups implements Serializable {
     @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<FamilyMembers> familyMembers;
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "dailyQuestion_id")
-    private DailyQuestion dailyQuestion;
+    @OneToMany(mappedBy = "familyGroups", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<FamilyDailyQuestion> familyDailyQuestions;
+
 }
