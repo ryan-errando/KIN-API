@@ -83,7 +83,7 @@ public class DailyQuestionResponseService {
                     .data(
                             DailyQuestionResponseDto.builder()
                                     .questionId(questionId.toString())
-                                    .questionMessage("still use static after question entity already published")
+                                    .questionMessage(familyDailyQuestion.getDailyQuestions().getQuestion())
                                     .isCompleted(familyDailyQuestion.getIsCompleted())
                                     .responses(questionResponses)
                                     .build()

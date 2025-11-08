@@ -33,9 +33,9 @@ public class FamilyDailyQuestion implements Serializable {
     @JoinColumn(name = "group_id", nullable = false)
     private FamilyGroups familyGroups;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "question_id", nullable = false)
-//    private List<Questions> questions;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "question_id", nullable = false)
+    private DailyQuestion dailyQuestions;
 
     @Column(name = "total_members")
     private Integer totalMembers;

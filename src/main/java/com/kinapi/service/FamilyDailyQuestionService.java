@@ -37,7 +37,7 @@ public class FamilyDailyQuestionService {
                 response.add(
                         FamilyDailyQuestionDto.builder()
                                 .id(item.getId().toString())
-                                .questionText("for now use static message first")
+                                .questionText(item.getDailyQuestions().getQuestion())
                                 .totalMember(item.getTotalMembers())
                                 .answeredCount(item.getAnsweredCount())
                                 .isCompleted(item.getIsCompleted())
