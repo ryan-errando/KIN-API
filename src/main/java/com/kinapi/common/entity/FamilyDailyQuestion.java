@@ -35,7 +35,7 @@ public class FamilyDailyQuestion implements Serializable {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id", nullable = false)
-    private DailyQuestion dailyQuestions;
+    private DailyQuestion dailyQuestion;
 
     @Column(name = "total_members")
     private Integer totalMembers;

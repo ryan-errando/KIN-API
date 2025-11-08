@@ -46,6 +46,7 @@ public class DailyQuestionResponseService {
                         questionResponses.add(
                                 DailyQuestionResponseDto.Responses.builder()
                                         .responseId(item.getId().toString())
+                                        .name(item.getFamilyMembers().getUser().getName())
                                         .moodValue(item.getMoodValue())
                                         .response(item.getResponse())
                                         .createdAt(item.getCreatedAt())
@@ -67,6 +68,7 @@ public class DailyQuestionResponseService {
                     questionResponses.add(
                             DailyQuestionResponseDto.Responses.builder()
                                     .responseId(dailyQuestionResponse.getId().toString())
+                                    .name(dailyQuestionResponse.getFamilyMembers().getUser().getName())
                                     .moodValue(dailyQuestionResponse.getMoodValue())
                                     .response(dailyQuestionResponse.getResponse())
                                     .createdAt(dailyQuestionResponse.getCreatedAt())
@@ -83,7 +85,7 @@ public class DailyQuestionResponseService {
                     .data(
                             DailyQuestionResponseDto.builder()
                                     .questionId(questionId.toString())
-                                    .questionMessage(familyDailyQuestion.getDailyQuestions().getQuestion())
+                                    .questionMessage(familyDailyQuestion.getDailyQuestion().getQuestion())
                                     .isCompleted(familyDailyQuestion.getIsCompleted())
                                     .responses(questionResponses)
                                     .build()
@@ -116,6 +118,11 @@ public class DailyQuestionResponseService {
 
             FamilyDailyQuestion familyDailyQuestion = familyDailyQuestionOptional.get();
 
+            Optional<DailyQuestionResponse> existingResponse = dailyQuestionResponseRepository.findByFamilyDailyQuestionAndFamilyMembers(familyDailyQuestion, userFamilyMember);
+            if(existingResponse.isPresent()){
+                throw new RuntimeException("You have already answered this question");
+            }
+
             DailyQuestionResponse dailyQuestionResponse = DailyQuestionResponse.builder()
                     .familyMembers(userFamilyMember)
                     .familyDailyQuestion(familyDailyQuestion)
@@ -124,6 +131,18 @@ public class DailyQuestionResponseService {
                     .build();
 
             dailyQuestionResponseRepository.save(dailyQuestionResponse);
+            log.info("[answerDailyQuestion] Response saved for user: {}", user.getEmail());
+
+            int currentAnsweredCount = familyDailyQuestion.getAnsweredCount() != null ? familyDailyQuestion.getAnsweredCount() : 0;
+            familyDailyQuestion.setAnsweredCount(currentAnsweredCount + 1);
+
+            if(familyDailyQuestion.getAnsweredCount().equals(familyDailyQuestion.getTotalMembers())){
+                familyDailyQuestion.setIsCompleted(true);
+                familyDailyQuestion.setCompletedAt(java.time.LocalDateTime.now());
+                log.info("[answerDailyQuestion] All members have responded. Question marked as completed.");
+            }
+
+            familyDailyQuestionRepository.save(familyDailyQuestion);
 
             return BaseResponse.builder()
                     .status(HttpStatus.OK.value())
