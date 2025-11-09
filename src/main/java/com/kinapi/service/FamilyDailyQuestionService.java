@@ -109,7 +109,11 @@ public class FamilyDailyQuestionService {
                 return buildQuestionResponse(newQuestion);
             } else {
                 log.warn("[getTodayDailyQuestion] Cannot generate new question yet. Previous question not completed or reset time not passed.");
-                throw new RuntimeException("Cannot generate new question. Please ensure all members have answered the previous question.");
+                return BaseResponse.builder()
+                        .status(HttpStatus.OK.value())
+                        .code(HttpStatus.OK)
+                        .message("No daily question need to be generated for now")
+                        .build();
             }
 
         } catch (Exception e) {
@@ -193,7 +197,15 @@ public class FamilyDailyQuestionService {
      * Generates a new daily question using OpenAI and saves it to the database
      */
     private FamilyDailyQuestion generateNewQuestion(FamilyGroups familyGroup) {
-        GeneratedQuestionDto generatedQuestion = openAIService.generateFamilyDailyQuestion().block();
+        List<FamilyDailyQuestion> recentQuestions = familyDailyQuestionRepository.findTop15ByFamilyGroupsOrderByAssignedDateDesc(familyGroup);
+
+        List<String> previousQuestionTexts = recentQuestions.stream()
+                .map(fdq -> fdq.getDailyQuestion().getQuestion())
+                .toList();
+
+        log.info("[generateNewQuestion] Fetched {} recent questions to avoid duplicates", previousQuestionTexts.size());
+
+        GeneratedQuestionDto generatedQuestion = openAIService.generateFamilyDailyQuestion(previousQuestionTexts).block();
 
         if(generatedQuestion == null) {
             throw new RuntimeException("Failed to generate question from OpenAI");

@@ -14,4 +14,5 @@ import java.util.UUID;
 public interface FamilyDailyQuestionRepository extends JpaRepository<FamilyDailyQuestion, UUID>, JpaSpecificationExecutor<FamilyDailyQuestion> {
     List<FamilyDailyQuestion> findByFamilyGroups(FamilyGroups familyGroups);
     Optional<FamilyDailyQuestion> findTopByFamilyGroupsOrderByAssignedDateDesc(FamilyGroups familyGroups);
+    List<FamilyDailyQuestion> findTop15ByFamilyGroupsOrderByAssignedDateDesc(FamilyGroups familyGroups);
 }

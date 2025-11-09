@@ -36,10 +36,12 @@ public class OpenAIService {
 
     /**
      * Generates a daily question for families to enhance their relationships
+     * @param previousQuestions List of recently asked questions to avoid duplicates
      * @return GeneratedQuestionDto containing the question and category
      */
-    public Mono<GeneratedQuestionDto> generateFamilyDailyQuestion() {
-        String prompt = """
+    public Mono<GeneratedQuestionDto> generateFamilyDailyQuestion(List<String> previousQuestions) {
+        StringBuilder promptBuilder = new StringBuilder();
+        promptBuilder.append("""
                 Generate a thoughtful daily question designed to help family members connect and strengthen their relationships.
 
                 The question should:
@@ -48,6 +50,17 @@ public class OpenAIService {
                 - Focus on positive experiences, memories, gratitude, dreams, or understanding each other better
                 - Be open-ended to promote discussion
                 - Avoid sensitive topics like finances, politics, or controversial subjects
+                """);
+
+        if (previousQuestions != null && !previousQuestions.isEmpty()) {
+            promptBuilder.append("\nIMPORTANT: Avoid generating questions similar to these recently asked questions:\n");
+            for (int i = 0; i < previousQuestions.size(); i++) {
+                promptBuilder.append(String.format("%d. %s\n", i + 1, previousQuestions.get(i)));
+            }
+            promptBuilder.append("\nMake sure your generated question is significantly different in topic and approach from the above questions.\n");
+        }
+
+        promptBuilder.append("""
 
                 Categories can be one of: "Gratitude", "Memories", "Dreams & Goals", "Fun & Hobbies", "Values & Beliefs", "Daily Life", "Feelings & Emotions"
 
@@ -56,7 +69,9 @@ public class OpenAIService {
                   "question": "Your generated question here",
                   "category": "Category name here"
                 }
-                """;
+                """);
+
+        String prompt = promptBuilder.toString();
 
         Map<String, String> userMessage = new HashMap<>();
         userMessage.put("role", "user");
