@@ -40,6 +40,9 @@ public class FamilyDailyQuestionService {
             }
 
             FamilyGroups familyGroups = user.getFamilyMembers().getGroup();
+
+            syncLatestQuestionMemberCount(familyGroups);
+
             List<FamilyDailyQuestion> familyDailyQuestions = familyDailyQuestionRepository.findByFamilyGroups(familyGroups);
             List<FamilyDailyQuestionDto> response = new ArrayList<>();
             for(FamilyDailyQuestion item :  familyDailyQuestions){
@@ -91,6 +94,8 @@ public class FamilyDailyQuestionService {
             LocalDateTime now = LocalDateTime.now();
 
             log.info("[getTodayDailyQuestion] Getting daily question for group: {}, resetTime: {}", familyGroup.getGroupName(), resetTime);
+
+            syncLatestQuestionMemberCount(familyGroup);
 
             LocalDate questionDate = calculateQuestionDate(now, resetTime);
             log.info("[getTodayDailyQuestion] Calculated question date: {}", questionDate);
@@ -252,5 +257,38 @@ public class FamilyDailyQuestionService {
                 .message("Successfully retrieved today's daily question")
                 .data(responseDto)
                 .build();
+    }
+
+    private void syncLatestQuestionMemberCount(FamilyGroups familyGroup) {
+        try {
+            Optional<FamilyDailyQuestion> latestQuestion = familyDailyQuestionRepository.findTopByFamilyGroupsOrderByAssignedDateDesc(familyGroup);
+
+            if (latestQuestion.isEmpty()) {
+                log.debug("[syncLatestQuestionMemberCount] No latest question found for group: {}", familyGroup.getGroupName());
+                return;
+            }
+
+            FamilyDailyQuestion question = latestQuestion.get();
+            long actualMemberCount = familyMembersRepository.countByGroup(familyGroup);
+
+            if (question.getTotalMembers() == actualMemberCount) {
+                log.debug("[syncLatestQuestionMemberCount] Member count already in sync for question {}", question.getId());
+                return;
+            }
+
+            int oldTotalMembers = question.getTotalMembers();
+            question.setTotalMembers((int) actualMemberCount);
+
+            boolean wasCompleted = question.getIsCompleted();
+            boolean isNowCompleted = question.getAnsweredCount() >= actualMemberCount;
+            question.setIsCompleted(isNowCompleted);
+
+            familyDailyQuestionRepository.save(question);
+
+            log.info("[syncLatestQuestionMemberCount] Synced question {} member count: {} -> {}, completion: {} -> {}", question.getId(), oldTotalMembers, actualMemberCount, wasCompleted, isNowCompleted);
+
+        } catch (Exception e) {
+            log.error("[syncLatestQuestionMemberCount] Error syncing member count: {}", e.getMessage(), e);
+        }
     }
 }
