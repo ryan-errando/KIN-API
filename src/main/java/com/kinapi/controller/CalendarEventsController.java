@@ -1,7 +1,6 @@
 package com.kinapi.controller;
 
 import com.kinapi.common.dto.AddCalendarEventsDto;
-import com.kinapi.common.dto.CalendarEventsDto;
 import com.kinapi.common.dto.SetCalendarEventCompletedDto;
 import com.kinapi.common.dto.UpdateCalendarEventsDto;
 import com.kinapi.common.entity.BaseResponse;
