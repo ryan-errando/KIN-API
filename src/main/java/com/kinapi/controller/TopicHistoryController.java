@@ -35,4 +35,18 @@ public class TopicHistoryController {
         BaseResponse response = topicHistoryService.addTopicHistory(topicHistoryDto);
         return new ResponseEntity<>(response, response.code());
     }
+
+    @GetMapping("/generate-questions")
+    public ResponseEntity<BaseResponse> generateQuestions(
+            @RequestParam(name = "category") String category
+    ){
+        BaseResponse response = topicHistoryService.generateMultipleQuestions(category);
+        return new ResponseEntity<>(response, response.code());
+    }
+
+    @GetMapping("/generate-random-question")
+    public ResponseEntity<BaseResponse> generateRandomQuestion(){
+        BaseResponse response = topicHistoryService.generateRandomQuestion();
+        return new ResponseEntity<>(response, response.code());
+    }
 }
