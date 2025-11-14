@@ -128,6 +128,7 @@ public class DailyQuestionResponseService {
                     .familyDailyQuestion(familyDailyQuestion)
                     .response(requestDto.getResponse())
                     .moodValue(requestDto.getMoodValue())
+                    .reflection(requestDto.getReflection())
                     .build();
 
             dailyQuestionResponseRepository.save(dailyQuestionResponse);

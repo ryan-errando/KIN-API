@@ -38,7 +38,7 @@ public class DailyQuestionResponseDto implements Serializable {
         @JsonProperty("name")
         private String name;
         @JsonProperty("mood_value")
-        private Integer moodValue;
+        private String moodValue;
         @JsonProperty("response")
         private String response;
         @JsonProperty("created_at")

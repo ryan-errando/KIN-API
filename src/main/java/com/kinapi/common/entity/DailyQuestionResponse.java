@@ -36,7 +36,10 @@ public class DailyQuestionResponse implements Serializable {
     private FamilyDailyQuestion familyDailyQuestion;
 
     @Column(name = "mood_value")
-    private Integer moodValue;
+    private String moodValue;
+
+    @Column(name = "reflection", columnDefinition = "TEXT")
+    private String reflection;
 
     @Column(name = "response", columnDefinition = "TEXT")
     private String response;
