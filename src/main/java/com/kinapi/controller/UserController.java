@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @RestController
@@ -51,6 +52,14 @@ public class UserController {
             @Valid @RequestBody UpdateUserProfileDto updateUserProfileDto
     ) {
         BaseResponse response = userService.updateProfile(updateUserProfileDto);
+        return new ResponseEntity<>(response, response.code());
+    }
+
+    @PostMapping("/upload-profile")
+    public ResponseEntity<BaseResponse> uploadProfile(
+            @RequestParam("file") MultipartFile file
+    ) {
+        BaseResponse response = userService.uploadProfile(file);
         return new ResponseEntity<>(response, response.code());
     }
 

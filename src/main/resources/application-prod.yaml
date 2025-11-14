@@ -31,6 +31,13 @@ openai:
     token: ${OPENAI_API_TOKEN}
     url: https://api.openai.com/v1
 
+supabase:
+  url: ${SUPABASE_URL}
+  api-key: ${SUPABASE_API_KEY}
+  storage:
+    bucket:
+      user-profiles: ${SUPABASE_BUCKET_USER_PROFILES}
+
 logging:
   level:
     com.kinapi: DEBUG
