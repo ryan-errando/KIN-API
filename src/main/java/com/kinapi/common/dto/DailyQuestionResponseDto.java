@@ -26,6 +26,8 @@ public class DailyQuestionResponseDto implements Serializable {
     private Boolean isCompleted;
     @JsonProperty("responses")
     private List<Responses> responses;
+    @JsonProperty("reflection_summary")
+    private String reflectionSummary;
 
     @Builder
     @Data

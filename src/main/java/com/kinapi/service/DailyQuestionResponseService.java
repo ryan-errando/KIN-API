@@ -91,6 +91,7 @@ public class DailyQuestionResponseService {
                                     .questionMessage(familyDailyQuestion.getDailyQuestion().getQuestion())
                                     .isCompleted(familyDailyQuestion.getIsCompleted())
                                     .responses(questionResponses)
+                                    .reflectionSummary(familyDailyQuestion.getReflectionSummary())
                                     .build()
                     )
                     .build();
