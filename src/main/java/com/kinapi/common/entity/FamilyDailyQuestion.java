@@ -54,6 +54,9 @@ public class FamilyDailyQuestion implements Serializable {
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
 
+    @Column(name = "reflection_summary", columnDefinition = "TEXT")
+    private String reflectionSummary;
+
     @Column(name = "updated_at")
     @UpdateTimestamp
     private LocalDateTime updatedAt;

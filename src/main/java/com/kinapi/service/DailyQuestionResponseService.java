@@ -2,11 +2,13 @@ package com.kinapi.service;
 
 import com.kinapi.common.dto.AnswerDailyQuestionDto;
 import com.kinapi.common.dto.DailyQuestionResponseDto;
+import com.kinapi.common.dto.GroupReflectionSummarizationDto;
 import com.kinapi.common.dto.UpdateDailyQuestionResponseDto;
 import com.kinapi.common.entity.*;
 import com.kinapi.common.repository.DailyQuestionResponseRepository;
 import com.kinapi.common.repository.FamilyDailyQuestionRepository;
 import com.kinapi.common.util.UserAuthHelper;
+import com.kinapi.service.openai.OpenAIService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -24,6 +26,7 @@ import java.util.UUID;
 public class DailyQuestionResponseService {
     private final DailyQuestionResponseRepository dailyQuestionResponseRepository;
     private final FamilyDailyQuestionRepository familyDailyQuestionRepository;
+    private final OpenAIService openAIService;
 
     public BaseResponse getDailyQuestionResponse(UUID questionId){
         try{
@@ -138,9 +141,20 @@ public class DailyQuestionResponseService {
             familyDailyQuestion.setAnsweredCount(currentAnsweredCount + 1);
 
             if(familyDailyQuestion.getAnsweredCount().equals(familyDailyQuestion.getTotalMembers())){
-                familyDailyQuestion.setIsCompleted(true);
-                familyDailyQuestion.setCompletedAt(java.time.LocalDateTime.now());
-                log.info("[answerDailyQuestion] All members have responded. Question marked as completed.");
+                try {
+                    String summaryResult = openAIService.generateFamilyReflectionSummarization(
+                            getGroupReflectionSummary(familyDailyQuestion.getDailyQuestionResponses())
+                    ).block();
+                    familyDailyQuestion.setReflectionSummary(summaryResult);
+                    familyDailyQuestion.setIsCompleted(true);
+                    familyDailyQuestion.setCompletedAt(java.time.LocalDateTime.now());
+                    log.info("[answerDailyQuestion] All members have responded. Question marked as completed with summary.");
+                } catch (Exception e) {
+                    log.error("[answerDailyQuestion] Failed to generate summary: {}", e.getMessage());
+                    familyDailyQuestion.setIsCompleted(true);
+                    familyDailyQuestion.setCompletedAt(java.time.LocalDateTime.now());
+                    familyDailyQuestion.setReflectionSummary("Summary generation failed. Please try again later.");
+                }
             }
 
             familyDailyQuestionRepository.save(familyDailyQuestion);
@@ -188,5 +202,19 @@ public class DailyQuestionResponseService {
                     .message("Failed updating question response: " + e.getMessage())
                     .build();
         }
+    }
+
+    private List<GroupReflectionSummarizationDto> getGroupReflectionSummary(List<DailyQuestionResponse> dailyQuestionResponseList){
+        List<GroupReflectionSummarizationDto> result = new ArrayList<>();
+        for(DailyQuestionResponse item : dailyQuestionResponseList){
+            result.add(
+                    GroupReflectionSummarizationDto.builder()
+                            .name(item.getFamilyMembers().getUser().getName())
+                            .mood(item.getMoodValue())
+                            .reflection(item.getReflection())
+                            .build()
+            );
+        }
+        return result;
     }
 }

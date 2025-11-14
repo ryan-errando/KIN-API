@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kinapi.common.dto.GeneratedQuestionDto;
 import com.kinapi.common.dto.GeneratedQuestionsDto;
+import com.kinapi.common.dto.GroupReflectionSummarizationDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -332,5 +333,99 @@ public class OpenAIService {
                 .question("What is one thing that made you smile today?")
                 .category(category)
                 .build();
+    }
+
+    /**
+     * Generates a summarization of family member reflections and moods
+     * @param reflections List of family member reflections with their moods
+     * @return Mono<String> containing the AI-generated summary with actionable insights
+     */
+    public Mono<String> generateFamilyReflectionSummarization(List<GroupReflectionSummarizationDto> reflections) {
+        if (reflections == null || reflections.isEmpty()) {
+            log.warn("No reflections provided for summarization");
+            return Mono.just("No reflections available to summarize.");
+        }
+
+        StringBuilder promptBuilder = new StringBuilder();
+        promptBuilder.append("""
+                You are a compassionate family wellness assistant. Your role is to help families stay connected and support each other's wellbeing.
+
+                Today, family members shared their daily reflections and current moods. Please create a warm, concise summary that helps the family understand each other better and strengthens their bond.
+
+                Family Reflections:
+                """);
+
+        for (GroupReflectionSummarizationDto reflection : reflections) {
+            promptBuilder.append(String.format("\n- %s (Mood: %s): \"%s\"",
+                    reflection.getName(),
+                    reflection.getMood(),
+                    reflection.getReflection()));
+        }
+
+        promptBuilder.append("""
+
+
+                Please provide a response in the following format:
+
+                1. A brief narrative (1-2 short paragraphs) that:
+                   - Summarizes the overall emotional landscape of the family
+                   - Highlights key themes or patterns
+                   - Shows empathy and validates each person's experience
+                   - Notes both celebrations and challenges
+                   - Feels warm, supportive, and authentic
+
+                2. A "What We Can Do" section with 3-5 specific, actionable suggestions that:
+                   - Help family members support each other
+                   - Address identified needs or challenges
+                   - Encourage connection and bonding
+                   - Are practical and achievable
+                   - Are presented as bullet points
+
+                Keep the tone warm, empathetic, and encouraging. Focus on building family connection and mutual support.
+                Do not use any markdown formatting like bold (**) or headers (###). Use simple text with bullet points (•) for the action items.
+                Do not include a title or heading at the top. Start directly with the narrative.
+                """);
+
+        String prompt = promptBuilder.toString();
+
+        Map<String, String> userMessage = new HashMap<>();
+        userMessage.put("role", "user");
+        userMessage.put("content", prompt);
+
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("model", GPT_4O_MINI);
+        requestBody.put("messages", List.of(userMessage));
+        requestBody.put("temperature", 0.7);
+
+        log.info("Generating family reflection summarization for {} members", reflections.size());
+
+        return openAIWebClient.post()
+                .uri("/chat/completions")
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(Map.class)
+                .map(this::parseSummarizationResponse)
+                .doOnSuccess(response -> log.info("Successfully generated family reflection summarization"))
+                .doOnError(error -> log.error("Error generating family reflection summarization: {}", error.getMessage()));
+    }
+
+    /**
+     * Parses the OpenAI response and extracts the summarization text
+     * @param response The raw OpenAI API response
+     * @return String containing the summarization
+     */
+    private String parseSummarizationResponse(Map<String, Object> response) {
+        try {
+            List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
+            if (choices != null && !choices.isEmpty()) {
+                Map<String, Object> firstChoice = choices.get(0);
+                Map<String, Object> message = (Map<String, Object>) firstChoice.get("message");
+                return (String) message.get("content");
+            }
+        } catch (Exception e) {
+            log.error("Error extracting summarization from OpenAI response: {}", e.getMessage());
+        }
+
+        return "Unable to generate summary at this time. Please try again later.";
     }
 }
