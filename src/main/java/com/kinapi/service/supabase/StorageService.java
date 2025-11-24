@@ -126,6 +126,47 @@ public class StorageService {
     }
 
     /**
+     * Delete gallery album file from Supabase Storage
+     * @param fileUrl Full URL of the file to delete
+     */
+    public void deleteGalleryAlbumFile(String fileUrl) {
+        try {
+            String prefix = supabaseUrl + "/storage/v1/object/public/" + galleryAlbumBucket + "/";
+
+            if (!fileUrl.startsWith(prefix)) {
+                log.error("[deleteGalleryAlbumFile] Invalid file URL format. Expected prefix: {}, Got: {}", prefix, fileUrl);
+                return;
+            }
+
+            String filePath = fileUrl.substring(prefix.length());
+            String deletePath = String.format("/object/%s/%s", galleryAlbumBucket, filePath);
+
+            log.info("[deleteGalleryAlbumFile] Attempting to delete file: {} (Path: {})", fileUrl, deletePath);
+
+            String response = webClient.delete()
+                    .uri(deletePath)
+                    .retrieve()
+                    .onStatus(
+                            status -> !status.is2xxSuccessful(),
+                            clientResponse -> clientResponse.bodyToMono(String.class)
+                                    .flatMap(body -> {
+                                        log.error("[deleteGalleryAlbumFile] Supabase delete failed with status {}: {}",
+                                                clientResponse.statusCode(), body);
+                                        return Mono.error(new RuntimeException("Failed to delete file: " + body));
+                                    })
+                    )
+                    .bodyToMono(String.class)
+                    .block();
+
+            log.info("[deleteGalleryAlbumFile] Successfully deleted gallery file from Supabase: {} (Response: {})", filePath, response);
+
+        } catch (Exception e) {
+            log.error("[deleteGalleryAlbumFile] Error deleting gallery file from Supabase: {}", fileUrl, e);
+            throw new RuntimeException("Failed to delete file from storage: " + e.getMessage(), e);
+        }
+    }
+
+    /**
      * Delete user profile picture from Supabase Storage
      * @param userId User's UUID
      * @param fileExtension File extension (jpg, png, etc.)

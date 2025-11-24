@@ -204,4 +204,52 @@ public class GroupAlbumService {
                     .build();
         }
     }
+
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResponse deleteAlbumPhotos(List<UUID> photoIds) {
+        try {
+            log.info("[deleteAlbumPhotos] Deleting {} photos", photoIds.size());
+
+            int successCount = 0;
+            int failCount = 0;
+
+            for (UUID photoId : photoIds) {
+                try {
+                    AlbumPhoto albumPhoto = albumPhotoRepository.findById(photoId)
+                            .orElseThrow(() -> new Exception("Photo not found: " + photoId));
+
+                    String fileUrl = albumPhoto.getFileUrl();
+
+                    // Delete file from Supabase Storage
+                    storageService.deleteGalleryAlbumFile(fileUrl);
+
+                    // Delete record from database
+                    albumPhotoRepository.delete(albumPhoto);
+
+                    successCount++;
+                    log.info("[deleteAlbumPhotos] Successfully deleted photo: {}", photoId);
+
+                } catch (Exception e) {
+                    failCount++;
+                    log.error("[deleteAlbumPhotos] Failed to delete photo: {}", photoId, e);
+                }
+            }
+
+            log.info("[deleteAlbumPhotos] Deletion complete: {} succeeded, {} failed", successCount, failCount);
+
+            return BaseResponse.builder()
+                    .status(HttpStatus.OK.value())
+                    .code(HttpStatus.OK)
+                    .message(String.format("Successfully deleted %d out of %d photos", successCount, photoIds.size()))
+                    .build();
+
+        } catch (Exception e) {
+            log.error("[deleteAlbumPhotos] Error deleting photos", e);
+            return BaseResponse.builder()
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .message("Error deleting photos: " + e.getMessage())
+                    .build();
+        }
+    }
 }
