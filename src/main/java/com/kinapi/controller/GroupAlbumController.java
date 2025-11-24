@@ -65,4 +65,12 @@ public class GroupAlbumController {
         BaseResponse response = groupAlbumService.deleteAlbumPhotos(photoIds);
         return new ResponseEntity<>(response, response.code());
     }
+
+    @DeleteMapping("/delete-album/{albumId}")
+    public ResponseEntity<BaseResponse> deleteAlbum(
+            @PathVariable UUID albumId
+    ){
+        BaseResponse response = groupAlbumService.deleteAlbum(albumId);
+        return new ResponseEntity<>(response, response.code());
+    }
 }

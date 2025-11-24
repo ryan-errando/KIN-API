@@ -252,4 +252,57 @@ public class GroupAlbumService {
                     .build();
         }
     }
+
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResponse deleteAlbum(UUID albumId) {
+        try {
+            GroupAlbum groupAlbum = groupAlbumRepository.findById(albumId)
+                    .orElseThrow(() -> new Exception("Album not found"));
+
+            String albumName = groupAlbum.getAlbumName();
+            List<AlbumPhoto> albumPhotos = albumPhotoRepository.findByGroupAlbum_IdOrderByCreatedAtDesc(albumId);
+
+            log.info("[deleteAlbum] Deleting album '{}' with {} photos", albumName, albumPhotos.size());
+
+            int successCount = 0;
+            int failCount = 0;
+
+            for (AlbumPhoto albumPhoto : albumPhotos) {
+                try {
+                    String fileUrl = albumPhoto.getFileUrl();
+
+                    storageService.deleteGalleryAlbumFile(fileUrl);
+
+                    albumPhotoRepository.delete(albumPhoto);
+
+                    successCount++;
+                    log.info("[deleteAlbum] Successfully deleted photo: {}", albumPhoto.getId());
+
+                } catch (Exception e) {
+                    failCount++;
+                    log.error("[deleteAlbum] Failed to delete photo: {}", albumPhoto.getId(), e);
+                }
+            }
+
+            groupAlbumRepository.delete(groupAlbum);
+
+            log.info("[deleteAlbum] Successfully deleted album '{}': {} photos deleted, {} failed",
+                    albumName, successCount, failCount);
+
+            return BaseResponse.builder()
+                    .status(HttpStatus.OK.value())
+                    .code(HttpStatus.OK)
+                    .message(String.format("Successfully deleted album '%s' with %d out of %d photos",
+                            albumName, successCount, albumPhotos.size()))
+                    .build();
+
+        } catch (Exception e) {
+            log.error("[deleteAlbum] Error deleting album: {}", albumId, e);
+            return BaseResponse.builder()
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .message("Error deleting album: " + e.getMessage())
+                    .build();
+        }
+    }
 }
