@@ -19,15 +19,18 @@ public class StorageService {
 
     private final String supabaseUrl;
     private final String userProfilesBucket;
+    private final String galleryAlbumBucket;
     private final WebClient webClient;
 
     public StorageService(
             @Value("${supabase.url}") String supabaseUrl,
             @Value("${supabase.api-key}") String apiKey,
-            @Value("${supabase.storage.bucket.user-profiles}") String userProfilesBucket
+            @Value("${supabase.storage.bucket.user-profiles}") String userProfilesBucket,
+            @Value("${supabase.storage.bucket.gallery-album}") String galleryAlbumBucket
     ) {
         this.supabaseUrl = supabaseUrl;
         this.userProfilesBucket = userProfilesBucket;
+        this.galleryAlbumBucket = galleryAlbumBucket;
         this.webClient = WebClient.builder()
                 .baseUrl(supabaseUrl + "/storage/v1")
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
@@ -78,6 +81,51 @@ public class StorageService {
     }
 
     /**
+     * Upload gallery album photo/video to Supabase Storage
+     * @param file MultipartFile from the request
+     * @param familyGroupId Family Group UUID
+     * @param groupAlbumId Group Album UUID
+     * @return Public URL of the uploaded file
+     */
+    public String uploadGalleryAlbumFile(MultipartFile file, UUID familyGroupId, UUID groupAlbumId) throws IOException {
+        validateGalleryFile(file);
+
+        String fileExtension = getFileExtension(file.getOriginalFilename());
+        String uniqueFilename = UUID.randomUUID() + "." + fileExtension;
+        String filePath = familyGroupId + "/" + groupAlbumId + "/" + uniqueFilename;
+
+        byte[] fileBytes = file.getBytes();
+
+        String uploadPath = String.format("/object/%s/%s", galleryAlbumBucket, filePath);
+
+        try {
+            webClient.post()
+                    .uri(uploadPath)
+                    .contentType(MediaType.parseMediaType(file.getContentType()))
+                    .body(BodyInserters.fromValue(fileBytes))
+                    .retrieve()
+                    .onStatus(
+                            status -> status.value() != 200,
+                            response -> response.bodyToMono(String.class).flatMap(body -> {
+                                log.error("Supabase upload failed: {}", body);
+                                return Mono.error(new RuntimeException("Failed to upload file to Supabase: " + body));
+                            })
+                    )
+                    .bodyToMono(String.class)
+                    .block();
+
+            String publicUrl = String.format("%s/storage/v1/object/public/%s/%s", supabaseUrl, galleryAlbumBucket, filePath);
+
+            log.info("Successfully uploaded gallery file to Supabase: {}", publicUrl);
+            return publicUrl;
+
+        } catch (Exception e) {
+            log.error("Error uploading gallery file to Supabase", e);
+            throw new IOException("Failed to upload gallery file to storage", e);
+        }
+    }
+
+    /**
      * Delete user profile picture from Supabase Storage
      * @param userId User's UUID
      * @param fileExtension File extension (jpg, png, etc.)
@@ -108,7 +156,7 @@ public class StorageService {
     }
 
     /**
-     * Validate uploaded file
+     * Validate uploaded file for user profile
      */
     private void validateFile(MultipartFile file) throws IOException {
         if (file.isEmpty()) {
@@ -132,6 +180,30 @@ public class StorageService {
     }
 
     /**
+     * Validate uploaded file for gallery album (supports images and videos)
+     */
+    private void validateGalleryFile(MultipartFile file) throws IOException {
+        if (file.isEmpty()) {
+            throw new IOException("File is empty");
+        }
+
+        long maxSize = 50 * 1024 * 1024; // 50MB for videos
+        if (file.getSize() > maxSize) {
+            throw new IOException("File size exceeds maximum limit of 50MB");
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || (!contentType.startsWith("image/") && !contentType.startsWith("video/"))) {
+            throw new IOException("Only image and video files are allowed");
+        }
+
+        String extension = getFileExtension(file.getOriginalFilename());
+        if (!isAllowedGalleryExtension(extension)) {
+            throw new IOException("File type not allowed. Allowed types: jpg, jpeg, png, mp4, mov, avi");
+        }
+    }
+
+    /**
      * Get file extension from filename
      */
     private String getFileExtension(String filename) throws IOException {
@@ -142,9 +214,16 @@ public class StorageService {
     }
 
     /**
-     * Check if file extension is allowed
+     * Check if file extension is allowed for user profile
      */
     private boolean isAllowedExtension(String extension) {
         return extension.matches("jpg|jpeg|png");
+    }
+
+    /**
+     * Check if file extension is allowed for gallery album
+     */
+    private boolean isAllowedGalleryExtension(String extension) {
+        return extension.matches("jpg|jpeg|png|mp4|mov|avi");
     }
 }

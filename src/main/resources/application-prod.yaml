@@ -41,6 +41,7 @@ supabase:
   storage:
     bucket:
       user-profiles: ${SUPABASE_BUCKET_USER_PROFILES}
+      gallery-album: ${SUPABASE_BUCKET_GALLERY_ALBUM}
 
 logging:
   level:
