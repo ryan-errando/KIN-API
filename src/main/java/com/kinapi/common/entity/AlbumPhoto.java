@@ -31,17 +31,13 @@ public class AlbumPhoto implements Serializable {
     @JoinColumn(name = "group_album_id", nullable = false)
     private GroupAlbum groupAlbum;
 
-    @Column(name = "file_url", columnDefinition = "TEXT")
+    @Column(name = "file_url", columnDefinition = "TEXT", nullable = false)
     private String fileUrl;
 
-    @Column(name = "uploaded_by")
+    @Column(name = "uploaded_by", nullable = false)
     private String uploadedBy;
 
     @Column(name = "created_at")
     @CreationTimestamp
     private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
 }

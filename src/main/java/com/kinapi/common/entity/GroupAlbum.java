@@ -33,7 +33,7 @@ public class GroupAlbum implements Serializable {
     @JoinColumn(name = "family_group_id", nullable = false)
     private FamilyGroups familyGroups;
 
-    @Column(name = "album_name", length = 1024)
+    @Column(name = "album_name", length = 1024, nullable = false)
     private String albumName;
 
     @Column(name = "created_at")
