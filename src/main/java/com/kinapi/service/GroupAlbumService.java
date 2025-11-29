@@ -34,7 +34,7 @@ public class GroupAlbumService {
 
     public BaseResponse getGroupAlbum(){
         Users user = UserAuthHelper.getUser();
-        FamilyGroups familyGroup = user.getFamilyGroups();
+        FamilyGroups familyGroup = user.getFamilyMembers().getGroup();
 
         List<GroupAlbum> groupAlbums = familyGroup.getGroupAlbums();
         List<FamilyGroupAlbumDto> response = groupAlbums.stream().filter(Objects::nonNull)
@@ -56,7 +56,7 @@ public class GroupAlbumService {
     public BaseResponse addNewAlbum(String albumName){
         try{
             Users user = UserAuthHelper.getUser();
-            FamilyGroups familyGroup = user.getFamilyGroups();
+            FamilyGroups familyGroup = user.getFamilyMembers().getGroup();
 
             log.info("[addNewAlbum] Creating new group album for group: {}", familyGroup.getGroupName());
 
@@ -115,7 +115,7 @@ public class GroupAlbumService {
     public BaseResponse uploadPhotosToAlbum(UUID albumId, MultipartFile[] files) {
         try {
             Users user = UserAuthHelper.getUser();
-            FamilyGroups familyGroup = user.getFamilyGroups();
+            FamilyGroups familyGroup = user.getFamilyMembers().getGroup();
 
             GroupAlbum groupAlbum = groupAlbumRepository.findById(albumId)
                     .orElseThrow(() -> new Exception("Album not found"));
