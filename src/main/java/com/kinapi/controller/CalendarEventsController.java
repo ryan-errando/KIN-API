@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -51,6 +52,14 @@ public class CalendarEventsController {
             @Valid @RequestBody SetCalendarEventCompletedDto setCalendarEventCompletedDto
             ) {
         BaseResponse response = calendarEventsService.setCalendarEventCompleted(setCalendarEventCompletedDto);
+        return new ResponseEntity<>(response, response.code());
+    }
+
+    @DeleteMapping("/delete-event/{id}")
+    public ResponseEntity<BaseResponse> deleteCalendarEvent(
+            @PathVariable UUID id
+    ) {
+        BaseResponse response = calendarEventsService.deleteCalendarEvent(id);
         return new ResponseEntity<>(response, response.code());
     }
 }
