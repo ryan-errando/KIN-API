@@ -30,17 +30,17 @@ public class FamilyGroups implements Serializable {
     @UuidGenerator(style = UuidGenerator.Style.TIME)
     private UUID id;
 
-    @Column(name = "group_name")
+    @Column(name = "group_name", nullable = false)
     private String groupName;
 
-    @Column(name = "invitation_code")
+    @Column(name = "invitation_code", unique = true, nullable = false)
     private String invitationCode;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
     private Users createdBy;
 
-    @Column(name = "reset_time")
+    @Column(name = "reset_time", nullable = false)
     private LocalTime resetTime;
 
     @Column(name = "created_at")

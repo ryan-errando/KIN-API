@@ -26,7 +26,7 @@ public class DailyQuestion {
     @UuidGenerator(style = UuidGenerator.Style.TIME)
     private UUID id;
 
-    @Column(name = "question")
+    @Column(name = "question", nullable = false)
     private String question;
 
     @Column(name = "created_at")

@@ -35,10 +35,10 @@ public class TopicHistory implements Serializable {
     @JoinColumn(name = "user_id", nullable = false)
     private Users user;
 
-    @Column(name = "category")
+    @Column(name = "category", nullable = false)
     private String category;
 
-    @Column(name = "topic_text", columnDefinition = "TEXT")
+    @Column(name = "topic_text", columnDefinition = "TEXT", nullable = false)
     private String topicText;
 
     @Column(name = "is_favorite")
