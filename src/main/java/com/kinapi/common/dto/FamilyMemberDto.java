@@ -1,5 +1,6 @@
 package com.kinapi.common.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
@@ -8,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 @Builder
 @Data
@@ -19,4 +21,7 @@ public class FamilyMemberDto implements Serializable {
     private String name;
     @JsonProperty("role")
     private String role;
+    @JsonProperty("joined_time")
+    @JsonFormat(pattern = "dd/MM/yyyy HH:mm:ss")
+    private LocalDateTime joinedTime;
 }

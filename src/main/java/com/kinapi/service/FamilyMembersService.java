@@ -149,6 +149,7 @@ public class FamilyMembersService {
                 .map(member -> FamilyMemberDto.builder()
                         .name(member.getUser().getName())
                         .role(member.getRole())
+                        .joinedTime(member.getJoinedTime())
                         .build())
                 .toList();
 
