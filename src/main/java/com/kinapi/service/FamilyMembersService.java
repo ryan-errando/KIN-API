@@ -1,5 +1,6 @@
 package com.kinapi.service;
 
+import com.kinapi.common.dto.FamilyMemberListDto;
 import com.kinapi.common.entity.BaseResponse;
 import com.kinapi.common.entity.FamilyGroups;
 import com.kinapi.common.entity.FamilyMembers;
@@ -143,14 +144,19 @@ public class FamilyMembersService {
         log.info("[getFamilyMemberNameList] Fetching family member name list");
         FamilyGroups familyGroups = user.getFamilyMembers().getGroup();
         List<FamilyMembers> familyMembers = familyGroups.getFamilyMembers();
-        List<String> familyMemberName = familyMembers.stream().filter(Objects::nonNull)
-                .map(member -> member.getUser().getName())
+        List<FamilyMemberListDto> response = familyMembers.stream()
+                .filter(Objects::nonNull)
+                .map(member -> FamilyMemberListDto.builder()
+                        .name(member.getUser().getName())
+                        .role(member.getRole())
+                        .joinedTime(member.getJoinedTime())
+                        .build())
                 .toList();
 
         return BaseResponse.builder()
                 .status(HttpStatus.OK.value())
                 .code(HttpStatus.OK)
-                .data(familyMemberName)
+                .data(response)
                 .message("Successfully retrieved family member names")
                 .build();
     }
