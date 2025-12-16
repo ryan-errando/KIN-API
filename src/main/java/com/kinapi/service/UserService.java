@@ -157,7 +157,7 @@ public class UserService {
                 throw new Exception("User is null");
             }
 
-            if(updateUserProfileDto.getName() != null && !updateUserProfileDto.getName().trim().isEmpty()){
+            if(updateUserProfileDto.getName() != null){
                 user.setName(updateUserProfileDto.getName().trim());
             }
             if(updateUserProfileDto.getDob() != null){
