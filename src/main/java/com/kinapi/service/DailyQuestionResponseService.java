@@ -2,11 +2,13 @@ package com.kinapi.service;
 
 import com.kinapi.common.dto.AnswerDailyQuestionDto;
 import com.kinapi.common.dto.DailyQuestionResponseDto;
+import com.kinapi.common.dto.GroupReflectionSummarizationDto;
 import com.kinapi.common.dto.UpdateDailyQuestionResponseDto;
 import com.kinapi.common.entity.*;
 import com.kinapi.common.repository.DailyQuestionResponseRepository;
 import com.kinapi.common.repository.FamilyDailyQuestionRepository;
 import com.kinapi.common.util.UserAuthHelper;
+import com.kinapi.service.openai.OpenAIService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -24,6 +26,7 @@ import java.util.UUID;
 public class DailyQuestionResponseService {
     private final DailyQuestionResponseRepository dailyQuestionResponseRepository;
     private final FamilyDailyQuestionRepository familyDailyQuestionRepository;
+    private final OpenAIService openAIService;
 
     public BaseResponse getDailyQuestionResponse(UUID questionId){
         try{
@@ -46,6 +49,7 @@ public class DailyQuestionResponseService {
                         questionResponses.add(
                                 DailyQuestionResponseDto.Responses.builder()
                                         .responseId(item.getId().toString())
+                                        .name(item.getFamilyMembers().getUser().getName())
                                         .moodValue(item.getMoodValue())
                                         .response(item.getResponse())
                                         .createdAt(item.getCreatedAt())
@@ -67,6 +71,7 @@ public class DailyQuestionResponseService {
                     questionResponses.add(
                             DailyQuestionResponseDto.Responses.builder()
                                     .responseId(dailyQuestionResponse.getId().toString())
+                                    .name(dailyQuestionResponse.getFamilyMembers().getUser().getName())
                                     .moodValue(dailyQuestionResponse.getMoodValue())
                                     .response(dailyQuestionResponse.getResponse())
                                     .createdAt(dailyQuestionResponse.getCreatedAt())
@@ -83,9 +88,10 @@ public class DailyQuestionResponseService {
                     .data(
                             DailyQuestionResponseDto.builder()
                                     .questionId(questionId.toString())
-                                    .questionMessage("still use static after question entity already published")
+                                    .questionMessage(familyDailyQuestion.getDailyQuestion().getQuestion())
                                     .isCompleted(familyDailyQuestion.getIsCompleted())
                                     .responses(questionResponses)
+                                    .reflectionSummary(familyDailyQuestion.getReflectionSummary())
                                     .build()
                     )
                     .build();
@@ -116,14 +122,43 @@ public class DailyQuestionResponseService {
 
             FamilyDailyQuestion familyDailyQuestion = familyDailyQuestionOptional.get();
 
+            Optional<DailyQuestionResponse> existingResponse = dailyQuestionResponseRepository.findByFamilyDailyQuestionAndFamilyMembers(familyDailyQuestion, userFamilyMember);
+            if(existingResponse.isPresent()){
+                throw new RuntimeException("You have already answered this question");
+            }
+
             DailyQuestionResponse dailyQuestionResponse = DailyQuestionResponse.builder()
                     .familyMembers(userFamilyMember)
                     .familyDailyQuestion(familyDailyQuestion)
                     .response(requestDto.getResponse())
                     .moodValue(requestDto.getMoodValue())
+                    .reflection(requestDto.getReflection())
                     .build();
 
             dailyQuestionResponseRepository.save(dailyQuestionResponse);
+            log.info("[answerDailyQuestion] Response saved for user: {}", user.getEmail());
+
+            int currentAnsweredCount = familyDailyQuestion.getAnsweredCount() != null ? familyDailyQuestion.getAnsweredCount() : 0;
+            familyDailyQuestion.setAnsweredCount(currentAnsweredCount + 1);
+
+            if(familyDailyQuestion.getAnsweredCount().equals(familyDailyQuestion.getTotalMembers())){
+                try {
+                    String summaryResult = openAIService.generateFamilyReflectionSummarization(
+                            getGroupReflectionSummary(familyDailyQuestion.getDailyQuestionResponses())
+                    ).block();
+                    familyDailyQuestion.setReflectionSummary(summaryResult);
+                    familyDailyQuestion.setIsCompleted(true);
+                    familyDailyQuestion.setCompletedAt(java.time.LocalDateTime.now());
+                    log.info("[answerDailyQuestion] All members have responded. Question marked as completed with summary.");
+                } catch (Exception e) {
+                    log.error("[answerDailyQuestion] Failed to generate summary: {}", e.getMessage());
+                    familyDailyQuestion.setIsCompleted(true);
+                    familyDailyQuestion.setCompletedAt(java.time.LocalDateTime.now());
+                    familyDailyQuestion.setReflectionSummary("Summary generation failed. Please try again later.");
+                }
+            }
+
+            familyDailyQuestionRepository.save(familyDailyQuestion);
 
             return BaseResponse.builder()
                     .status(HttpStatus.OK.value())
@@ -168,5 +203,19 @@ public class DailyQuestionResponseService {
                     .message("Failed updating question response: " + e.getMessage())
                     .build();
         }
+    }
+
+    private List<GroupReflectionSummarizationDto> getGroupReflectionSummary(List<DailyQuestionResponse> dailyQuestionResponseList){
+        List<GroupReflectionSummarizationDto> result = new ArrayList<>();
+        for(DailyQuestionResponse item : dailyQuestionResponseList){
+            result.add(
+                    GroupReflectionSummarizationDto.builder()
+                            .name(item.getFamilyMembers().getUser().getName())
+                            .mood(item.getMoodValue())
+                            .reflection(item.getReflection())
+                            .build()
+            );
+        }
+        return result;
     }
 }

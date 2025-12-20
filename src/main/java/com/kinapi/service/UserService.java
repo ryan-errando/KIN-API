@@ -7,6 +7,7 @@ import com.kinapi.common.repository.UserRepository;
 import com.kinapi.common.util.DateHelper;
 import com.kinapi.common.util.JwtUtil;
 import com.kinapi.common.util.UserAuthHelper;
+import com.kinapi.service.supabase.StorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @Slf4j
@@ -26,6 +28,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
+    private final StorageService storageService;
 
     public BaseResponse addUser(UserRegisterDto userRegisterDto) {
         log.debug("\n[addUser] Adding new user...\nname: {}\nemail: {}", userRegisterDto.getName(), userRegisterDto.getEmail());
@@ -156,7 +159,7 @@ public class UserService {
                 throw new Exception("User is null");
             }
 
-            if(updateUserProfileDto.getName() != null && !updateUserProfileDto.getName().trim().isEmpty()){
+            if(updateUserProfileDto.getName() != null){
                 user.setName(updateUserProfileDto.getName().trim());
             }
             if(updateUserProfileDto.getDob() != null){
@@ -175,6 +178,59 @@ public class UserService {
                     .code(HttpStatus.INTERNAL_SERVER_ERROR)
                     .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .message("Error during profile update")
+                    .build();
+        }
+    }
+
+    public BaseResponse uploadProfile(MultipartFile file) {
+        try {
+            log.info("[uploadProfile] Uploading user avatar...");
+            Users user = UserAuthHelper.getUser();
+
+            if (user == null) {
+                throw new Exception("User is invalid");
+            }
+
+            if (user.getAvatarUrl() != null && !user.getAvatarUrl().trim().isEmpty()) {
+                log.info("[uploadProfile] Deleting old avatar for user: {}", user.getEmail());
+                try {
+                    String oldUrl = user.getAvatarUrl();
+                    String fileName = oldUrl.substring(oldUrl.lastIndexOf("/") + 1);
+                    if (fileName.contains(".")) {
+                        String extension = fileName.substring(fileName.lastIndexOf(".") + 1);
+                        storageService.deleteUserProfile(user.getId(), extension);
+                    }
+                } catch (Exception e) {
+                    log.warn("[uploadProfile] Failed to delete old avatar (continuing with upload): {}", e.getMessage());
+                }
+            }
+
+            String avatarUrl = storageService.uploadUserProfile(file, user.getId());
+
+            user.setAvatarUrl(avatarUrl);
+            userRepository.save(user);
+
+            log.info("[uploadProfile] Successfully uploaded avatar for user: {}", user.getEmail());
+
+            return BaseResponse.builder()
+                    .status(HttpStatus.OK.value())
+                    .code(HttpStatus.OK)
+                    .message("Avatar uploaded successfully")
+                    .data(UserProfileDto.builder()
+                            .userId(user.getId().toString())
+                            .email(user.getEmail())
+                            .name(user.getName())
+                            .dob(DateHelper.formatToddMMyyyy(user.getDob()))
+                            .avatarUrl(avatarUrl)
+                            .isInGroup(user.getIsInGroup())
+                            .build())
+                    .build();
+        } catch (Exception e) {
+            log.error("[uploadProfile] Error uploading avatar: {}", e.getMessage(), e);
+            return BaseResponse.builder()
+                    .code(HttpStatus.BAD_REQUEST)
+                    .status(HttpStatus.BAD_REQUEST.value())
+                    .message("Error uploading avatar: " + e.getMessage())
                     .build();
         }
     }

@@ -16,13 +16,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-/*
-ENTITY
-- KASARNYA KEA TABLE DI DATABASE
-- MAKE SURE SEMUA FIELD MATCHING (NAMA, TYPE, SIFAT(NULLABLE))
-- INI GABOLE DI PASSING MENTAH-MENTAH KE FRONTEND
- */
-
 @Getter
 @Setter
 @Entity
@@ -40,27 +33,27 @@ public class Users implements Serializable {
     @UuidGenerator(style = UuidGenerator.Style.TIME)
     private UUID id;
 
-    @Column(name = "name")
+    @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "email")
+    @Column(name = "email", nullable = false, unique = true )
     private String email;
 
-    @Column(name = "password")
+    @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "dob") // VARCHAR -> MISAL VARCHAR(255) LU CUMA BOLE SAVE SAMPE 255 BYTE
+    @Column(name = "dob", nullable = false)
     private LocalDate dob;
 
-    @Column(name = "avatar_url", columnDefinition = "TEXT") // TEXT -> STRING YANG PANJANGNYA FLEXIBLE
+    @Column(name = "avatar_url", columnDefinition = "TEXT")
     private String avatarUrl;
 
     @Column(name = "created_at")
-    @CreationTimestamp // WAKTU BIKIN RECORD DIA BAKALAN SAVE TIMESTAMP WKTU SEBUAH RECORD DI SAVE KE DALAM DATABASE
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
-    @UpdateTimestamp // WAKTU KITA MODIFY/UPDATE DATA DIA BAKALAN UPDATE TIMESTAMP DARI RECORD TERSEBUT
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 
     @Column(name = "is_in_group")

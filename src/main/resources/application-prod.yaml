@@ -2,19 +2,33 @@ server:
   port: ${SERVER_PORT}
 
 spring:
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
   jackson:
     date-format: dd/MM/yyyy
+    time-zone: Asia/Jakarta
   jpa:
     hibernate:
       ddl-auto: none
     show-sql: false
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: Asia/Jakarta
   datasource:
     url: ${DATASOURCE_URL}
     username: ${DATASOURCE_USERNAME}
     password: ${DATASOURCE_PASSWORD}
     hikari:
       schema: public
+      maximum-pool-size: 5
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
     driver-class-name: org.postgresql.Driver
 
 jwt:
@@ -25,6 +39,14 @@ openai:
   api:
     token: ${OPENAI_API_TOKEN}
     url: https://api.openai.com/v1
+
+supabase:
+  url: ${SUPABASE_URL}
+  api-key: ${SUPABASE_API_KEY}
+  storage:
+    bucket:
+      user-profiles: ${SUPABASE_BUCKET_USER_PROFILES}
+      gallery-album: ${SUPABASE_BUCKET_GALLERY_ALBUM}
 
 logging:
   level:

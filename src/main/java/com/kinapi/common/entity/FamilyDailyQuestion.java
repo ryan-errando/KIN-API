@@ -33,9 +33,9 @@ public class FamilyDailyQuestion implements Serializable {
     @JoinColumn(name = "group_id", nullable = false)
     private FamilyGroups familyGroups;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "question_id", nullable = false)
-//    private List<Questions> questions;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "question_id", nullable = false)
+    private DailyQuestion dailyQuestion;
 
     @Column(name = "total_members")
     private Integer totalMembers;
@@ -53,6 +53,9 @@ public class FamilyDailyQuestion implements Serializable {
 
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
+
+    @Column(name = "reflection_summary", columnDefinition = "TEXT")
+    private String reflectionSummary;
 
     @Column(name = "updated_at")
     @UpdateTimestamp

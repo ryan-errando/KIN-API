@@ -26,6 +26,8 @@ public class DailyQuestionResponseDto implements Serializable {
     private Boolean isCompleted;
     @JsonProperty("responses")
     private List<Responses> responses;
+    @JsonProperty("reflection_summary")
+    private String reflectionSummary;
 
     @Builder
     @Data
@@ -35,8 +37,10 @@ public class DailyQuestionResponseDto implements Serializable {
     public static class Responses implements Serializable {
         @JsonProperty("response_id")
         private String responseId;
+        @JsonProperty("name")
+        private String name;
         @JsonProperty("mood_value")
-        private Integer moodValue;
+        private String moodValue;
         @JsonProperty("response")
         private String response;
         @JsonProperty("created_at")

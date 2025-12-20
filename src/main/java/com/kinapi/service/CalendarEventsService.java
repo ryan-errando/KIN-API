@@ -23,6 +23,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -197,6 +198,35 @@ public class CalendarEventsService {
                     .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .code(HttpStatus.INTERNAL_SERVER_ERROR)
                     .message("Failed updating event: " + e.getMessage())
+                    .build();
+        }
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public BaseResponse deleteCalendarEvent(UUID id) {
+        try {
+            log.info("[deleteCalendarEvent] Deleting calendar event with id: {}", id);
+            Optional<CalendarEvents> eventsOptional = calendarEventsRepository.findById(id);
+
+            if(eventsOptional.isEmpty()){
+                throw new Exception("Calendar event is not found");
+            }
+
+            calendarEventsRepository.deleteById(id);
+
+            log.info("[deleteCalendarEvent] Calendar event deleted successfully");
+            return BaseResponse.builder()
+                    .status(HttpStatus.OK.value())
+                    .code(HttpStatus.OK)
+                    .message("Successfully deleted event")
+                    .build();
+
+        } catch (Exception e) {
+            log.error("[deleteCalendarEvent] Failed to delete calendar event: {}", e.getMessage());
+            return BaseResponse.builder()
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .message("Failed deleting event: " + e.getMessage())
                     .build();
         }
     }

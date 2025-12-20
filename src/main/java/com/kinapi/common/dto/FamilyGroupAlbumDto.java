@@ -15,13 +15,9 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AnswerDailyQuestionDto implements Serializable {
-    @JsonProperty("family_question_id")
-    private UUID familyQuestionId;
-    @JsonProperty("response")
-    private String response;
-    @JsonProperty("mood_value")
-    private String moodValue;
-    @JsonProperty("reflection")
-    private String reflection;
+public class FamilyGroupAlbumDto implements Serializable {
+    @JsonProperty("album_id")
+    private UUID albumId;
+    @JsonProperty("album_name")
+    private String albumName;
 }

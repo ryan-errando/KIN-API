@@ -7,9 +7,12 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface FamilyDailyQuestionRepository extends JpaRepository<FamilyDailyQuestion, UUID>, JpaSpecificationExecutor<FamilyDailyQuestion> {
     List<FamilyDailyQuestion> findByFamilyGroups(FamilyGroups familyGroups);
+    Optional<FamilyDailyQuestion> findTopByFamilyGroupsOrderByAssignedDateDesc(FamilyGroups familyGroups);
+    List<FamilyDailyQuestion> findTop15ByFamilyGroupsOrderByAssignedDateDesc(FamilyGroups familyGroups);
 }

@@ -10,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -33,6 +32,20 @@ public class TopicHistoryController {
             @Valid @RequestBody List<TopicHistoryDto> topicHistoryDto
     ){
         BaseResponse response = topicHistoryService.addTopicHistory(topicHistoryDto);
+        return new ResponseEntity<>(response, response.code());
+    }
+
+    @GetMapping("/generate-questions")
+    public ResponseEntity<BaseResponse> generateQuestions(
+            @RequestParam(name = "category") String category
+    ){
+        BaseResponse response = topicHistoryService.generateMultipleQuestions(category);
+        return new ResponseEntity<>(response, response.code());
+    }
+
+    @GetMapping("/generate-random-question")
+    public ResponseEntity<BaseResponse> generateRandomQuestion(){
+        BaseResponse response = topicHistoryService.generateRandomQuestion();
         return new ResponseEntity<>(response, response.code());
     }
 }

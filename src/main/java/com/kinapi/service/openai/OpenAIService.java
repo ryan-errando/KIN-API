@@ -4,12 +4,15 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kinapi.common.dto.GeneratedQuestionDto;
+import com.kinapi.common.dto.GeneratedQuestionsDto;
+import com.kinapi.common.dto.GroupReflectionSummarizationDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,10 +39,12 @@ public class OpenAIService {
 
     /**
      * Generates a daily question for families to enhance their relationships
+     * @param previousQuestions List of recently asked questions to avoid duplicates
      * @return GeneratedQuestionDto containing the question and category
      */
-    public Mono<GeneratedQuestionDto> generateFamilyDailyQuestion() {
-        String prompt = """
+    public Mono<GeneratedQuestionDto> generateFamilyDailyQuestion(List<String> previousQuestions) {
+        StringBuilder promptBuilder = new StringBuilder();
+        promptBuilder.append("""
                 Generate a thoughtful daily question designed to help family members connect and strengthen their relationships.
 
                 The question should:
@@ -48,6 +53,17 @@ public class OpenAIService {
                 - Focus on positive experiences, memories, gratitude, dreams, or understanding each other better
                 - Be open-ended to promote discussion
                 - Avoid sensitive topics like finances, politics, or controversial subjects
+                """);
+
+        if (previousQuestions != null && !previousQuestions.isEmpty()) {
+            promptBuilder.append("\nIMPORTANT: Avoid generating questions similar to these recently asked questions:\n");
+            for (int i = 0; i < previousQuestions.size(); i++) {
+                promptBuilder.append(String.format("%d. %s\n", i + 1, previousQuestions.get(i)));
+            }
+            promptBuilder.append("\nMake sure your generated question is significantly different in topic and approach from the above questions.\n");
+        }
+
+        promptBuilder.append("""
 
                 Categories can be one of: "Gratitude", "Memories", "Dreams & Goals", "Fun & Hobbies", "Values & Beliefs", "Daily Life", "Feelings & Emotions"
 
@@ -56,7 +72,9 @@ public class OpenAIService {
                   "question": "Your generated question here",
                   "category": "Category name here"
                 }
-                """;
+                """);
+
+        String prompt = promptBuilder.toString();
 
         Map<String, String> userMessage = new HashMap<>();
         userMessage.put("role", "user");
@@ -109,5 +127,305 @@ public class OpenAIService {
                 .question("What is one thing that made you smile today?")
                 .category("Daily Life")
                 .build();
+    }
+
+    /**
+     * Generates 4 daily questions based on a specific category for family bonding
+     * @param category The category to generate questions for
+     * @param previousQuestions List of recently asked questions to avoid duplicates
+     * @return GeneratedQuestionsDto containing 4 questions and the category
+     */
+    public Mono<GeneratedQuestionsDto> generateMultipleFamilyQuestions(String category, List<String> previousQuestions) {
+        StringBuilder promptBuilder = new StringBuilder();
+        promptBuilder.append(String.format("""
+                Generate 4 thoughtful daily questions designed to help family members connect and strengthen their relationships.
+
+                All questions must be related to the category: "%s"
+
+                Each question should:
+                - Encourage meaningful conversation and sharing among family members
+                - Be appropriate for all family members (including children and adults)
+                - Focus on positive experiences, memories, gratitude, dreams, or understanding each other better
+                - Be open-ended to promote discussion
+                - Avoid sensitive topics like finances, politics, or controversial subjects
+                - Be unique and different from each other
+                """, category));
+
+        if (previousQuestions != null && !previousQuestions.isEmpty()) {
+            promptBuilder.append("\nIMPORTANT: Avoid generating questions similar to these recently asked questions:\n");
+            for (int i = 0; i < previousQuestions.size(); i++) {
+                promptBuilder.append(String.format("%d. %s\n", i + 1, previousQuestions.get(i)));
+            }
+            promptBuilder.append("\nMake sure your generated questions are significantly different in topic and approach from the above questions.\n");
+        }
+
+        promptBuilder.append("""
+
+                Please respond in the following JSON format only, without any additional text or markdown:
+                {
+                  "questions": [
+                    "First question here",
+                    "Second question here",
+                    "Third question here",
+                    "Fourth question here"
+                  ]
+                }
+                """);
+
+        String prompt = promptBuilder.toString();
+
+        Map<String, String> userMessage = new HashMap<>();
+        userMessage.put("role", "user");
+        userMessage.put("content", prompt);
+
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("model", GPT_4O_MINI);
+        requestBody.put("messages", List.of(userMessage));
+        requestBody.put("temperature", 0.8);
+
+        log.info("Generating 4 family questions for category '{}' using OpenAI model: {}", category, GPT_4O_MINI);
+
+        return openAIWebClient.post()
+                .uri("/chat/completions")
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(Map.class)
+                .map(response -> parseMultipleQuestionsResponse(response, category))
+                .doOnSuccess(response -> log.info("Successfully generated 4 family questions for category: {}", category))
+                .doOnError(error -> log.error("Error generating family questions: {}", error.getMessage()));
+    }
+
+    /**
+     * Generates 1 daily question based on a specific category for family bonding
+     * @param category The category to generate question for
+     * @param previousQuestions List of recently asked questions to avoid duplicates
+     * @return GeneratedQuestionDto containing 1 question and the category
+     */
+    public Mono<GeneratedQuestionDto> generateSingleFamilyQuestion(String category, List<String> previousQuestions) {
+        StringBuilder promptBuilder = new StringBuilder();
+        promptBuilder.append(String.format("""
+                Generate a thoughtful daily question designed to help family members connect and strengthen their relationships.
+
+                The question must be related to the category: "%s"
+
+                The question should:
+                - Encourage meaningful conversation and sharing among family members
+                - Be appropriate for all family members (including children and adults)
+                - Focus on positive experiences, memories, gratitude, dreams, or understanding each other better
+                - Be open-ended to promote discussion
+                - Avoid sensitive topics like finances, politics, or controversial subjects
+                """, category));
+
+        if (previousQuestions != null && !previousQuestions.isEmpty()) {
+            promptBuilder.append("\nIMPORTANT: Avoid generating questions similar to these recently asked questions:\n");
+            for (int i = 0; i < previousQuestions.size(); i++) {
+                promptBuilder.append(String.format("%d. %s\n", i + 1, previousQuestions.get(i)));
+            }
+            promptBuilder.append("\nMake sure your generated question is significantly different in topic and approach from the above questions.\n");
+        }
+
+        promptBuilder.append("""
+
+                Please respond in the following JSON format only, without any additional text or markdown:
+                {
+                  "question": "Your generated question here"
+                }
+                """);
+
+        String prompt = promptBuilder.toString();
+
+        Map<String, String> userMessage = new HashMap<>();
+        userMessage.put("role", "user");
+        userMessage.put("content", prompt);
+
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("model", GPT_4O_MINI);
+        requestBody.put("messages", List.of(userMessage));
+        requestBody.put("temperature", 0.8);
+
+        log.info("Generating single family question for category '{}' using OpenAI model: {}", category, GPT_4O_MINI);
+
+        return openAIWebClient.post()
+                .uri("/chat/completions")
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(Map.class)
+                .map(response -> parseSingleQuestionResponse(response, category))
+                .doOnSuccess(response -> log.info("Successfully generated family question for category: {}", category))
+                .doOnError(error -> log.error("Error generating family question: {}", error.getMessage()));
+    }
+
+    /**
+     * Parses the OpenAI response for multiple questions
+     * @param response The raw OpenAI API response
+     * @param category The category of the questions
+     * @return GeneratedQuestionsDto with questions and category
+     */
+    private GeneratedQuestionsDto parseMultipleQuestionsResponse(Map<String, Object> response, String category) {
+        try {
+            List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
+            if (choices != null && !choices.isEmpty()) {
+                Map<String, Object> firstChoice = choices.get(0);
+                Map<String, Object> message = (Map<String, Object>) firstChoice.get("message");
+                String content = (String) message.get("content");
+
+                JsonNode jsonNode = objectMapper.readTree(content);
+                JsonNode questionsNode = jsonNode.get("questions");
+
+                List<String> questions = new ArrayList<>();
+                if (questionsNode.isArray()) {
+                    for (JsonNode questionNode : questionsNode) {
+                        questions.add(questionNode.asText());
+                    }
+                }
+
+                return GeneratedQuestionsDto.builder()
+                        .questions(questions)
+                        .category(category)
+                        .build();
+            }
+        } catch (JsonProcessingException e) {
+            log.error("Error parsing JSON from OpenAI response: {}", e.getMessage());
+        } catch (Exception e) {
+            log.error("Error extracting questions from OpenAI response: {}", e.getMessage());
+        }
+
+        // Fallback questions
+        return GeneratedQuestionsDto.builder()
+                .questions(List.of(
+                        "What is one thing that made you smile today?",
+                        "What are you grateful for today?",
+                        "What is something new you learned recently?",
+                        "What is a happy memory you have with the family?"
+                ))
+                .category(category)
+                .build();
+    }
+
+    /**
+     * Parses the OpenAI response for a single question
+     * @param response The raw OpenAI API response
+     * @param category The category of the question
+     * @return GeneratedQuestionDto with question and category
+     */
+    private GeneratedQuestionDto parseSingleQuestionResponse(Map<String, Object> response, String category) {
+        try {
+            List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
+            if (choices != null && !choices.isEmpty()) {
+                Map<String, Object> firstChoice = choices.get(0);
+                Map<String, Object> message = (Map<String, Object>) firstChoice.get("message");
+                String content = (String) message.get("content");
+
+                JsonNode jsonNode = objectMapper.readTree(content);
+
+                return GeneratedQuestionDto.builder()
+                        .question(jsonNode.get("question").asText())
+                        .category(category)
+                        .build();
+            }
+        } catch (JsonProcessingException e) {
+            log.error("Error parsing JSON from OpenAI response: {}", e.getMessage());
+        } catch (Exception e) {
+            log.error("Error extracting question from OpenAI response: {}", e.getMessage());
+        }
+
+        return GeneratedQuestionDto.builder()
+                .question("What is one thing that made you smile today?")
+                .category(category)
+                .build();
+    }
+
+    /**
+     * Generates a summarization of family member reflections and moods
+     * @param reflections List of family member reflections with their moods
+     * @return Mono<String> containing the AI-generated summary with actionable insights
+     */
+    public Mono<String> generateFamilyReflectionSummarization(List<GroupReflectionSummarizationDto> reflections) {
+        if (reflections == null || reflections.isEmpty()) {
+            log.warn("No reflections provided for summarization");
+            return Mono.just("No reflections available to summarize.");
+        }
+
+        StringBuilder promptBuilder = new StringBuilder();
+        promptBuilder.append("""
+                You are a compassionate family wellness assistant. Your role is to help families stay connected and support each other's wellbeing.
+
+                Today, family members shared their daily reflections and current moods. Please create a warm, concise summary that helps the family understand each other better and strengthens their bond.
+
+                Family Reflections:
+                """);
+
+        for (GroupReflectionSummarizationDto reflection : reflections) {
+            promptBuilder.append(String.format("\n- %s (Mood: %s): \"%s\"",
+                    reflection.getName(),
+                    reflection.getMood(),
+                    reflection.getReflection()));
+        }
+
+        promptBuilder.append("""
+
+
+                Please provide a response in the following format:
+
+                1. A brief narrative (1-2 short paragraphs) that:
+                   - Summarizes the overall emotional landscape of the family
+                   - Highlights key themes or patterns
+                   - Shows empathy and validates each person's experience
+                   - Notes both celebrations and challenges
+                   - Feels warm, supportive, and authentic
+
+                2. A "What We Can Do" section with 3-5 specific, actionable suggestions that:
+                   - Help family members support each other
+                   - Address identified needs or challenges
+                   - Encourage connection and bonding
+                   - Are practical and achievable
+                   - Are presented as bullet points
+
+                Keep the tone warm, empathetic, and encouraging. Focus on building family connection and mutual support.
+                Do not use any markdown formatting like bold (**) or headers (###). Use simple text with bullet points (•) for the action items.
+                Do not include a title or heading at the top. Start directly with the narrative.
+                """);
+
+        String prompt = promptBuilder.toString();
+
+        Map<String, String> userMessage = new HashMap<>();
+        userMessage.put("role", "user");
+        userMessage.put("content", prompt);
+
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("model", GPT_4O_MINI);
+        requestBody.put("messages", List.of(userMessage));
+        requestBody.put("temperature", 0.7);
+
+        log.info("Generating family reflection summarization for {} members", reflections.size());
+
+        return openAIWebClient.post()
+                .uri("/chat/completions")
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(Map.class)
+                .map(this::parseSummarizationResponse)
+                .doOnSuccess(response -> log.info("Successfully generated family reflection summarization"))
+                .doOnError(error -> log.error("Error generating family reflection summarization: {}", error.getMessage()));
+    }
+
+    /**
+     * Parses the OpenAI response and extracts the summarization text
+     * @param response The raw OpenAI API response
+     * @return String containing the summarization
+     */
+    private String parseSummarizationResponse(Map<String, Object> response) {
+        try {
+            List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
+            if (choices != null && !choices.isEmpty()) {
+                Map<String, Object> firstChoice = choices.get(0);
+                Map<String, Object> message = (Map<String, Object>) firstChoice.get("message");
+                return (String) message.get("content");
+            }
+        } catch (Exception e) {
+            log.error("Error extracting summarization from OpenAI response: {}", e.getMessage());
+        }
+
+        return "Unable to generate summary at this time. Please try again later.";
     }
 }

@@ -1,29 +1,27 @@
 package com.kinapi.common.entity;
 
 import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Table;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.DynamicInsert;
-import org.hibernate.annotations.DynamicUpdate;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.annotations.UuidGenerator;
+import org.hibernate.annotations.*;
 import org.hibernate.type.SqlTypes;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
 @Setter
 @Entity
-@Table(name = "topic_history")
+@Table(name = "group_album")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @DynamicInsert
 @DynamicUpdate
-public class TopicHistory implements Serializable {
+public class GroupAlbum implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false)
@@ -32,17 +30,11 @@ public class TopicHistory implements Serializable {
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private Users user;
+    @JoinColumn(name = "family_group_id", nullable = false)
+    private FamilyGroups familyGroups;
 
-    @Column(name = "category", nullable = false)
-    private String category;
-
-    @Column(name = "topic_text", columnDefinition = "TEXT", nullable = false)
-    private String topicText;
-
-    @Column(name = "is_favorite")
-    private Boolean isFavorite;
+    @Column(name = "album_name", length = 1024, nullable = false)
+    private String albumName;
 
     @Column(name = "created_at")
     @CreationTimestamp
@@ -51,4 +43,7 @@ public class TopicHistory implements Serializable {
     @Column(name = "updated_at")
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "groupAlbum", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<AlbumPhoto> albumPhotos;
 }

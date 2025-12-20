@@ -22,4 +22,9 @@ public class FamilyDailyQuestionController {
         return new ResponseEntity<>(response, response.code());
     }
 
+    @GetMapping("/sync-family-daily-question")
+    public ResponseEntity<BaseResponse> syncFamilyDailyQuestion() {
+        BaseResponse response = familyDailyQuestionService.getTodayDailyQuestion();
+        return new ResponseEntity<>(response, response.code());
+    }
 }

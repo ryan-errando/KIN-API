@@ -35,10 +35,13 @@ public class DailyQuestionResponse implements Serializable {
     @JoinColumn(name = "family_daily_question_id", nullable = false)
     private FamilyDailyQuestion familyDailyQuestion;
 
-    @Column(name = "mood_value")
-    private Integer moodValue;
+    @Column(name = "mood_value", nullable = false)
+    private String moodValue;
 
-    @Column(name = "response", columnDefinition = "TEXT")
+    @Column(name = "reflection", columnDefinition = "TEXT", nullable = false)
+    private String reflection;
+
+    @Column(name = "response", columnDefinition = "TEXT", nullable = false)
     private String response;
 
     @Column(name = "created_at")
