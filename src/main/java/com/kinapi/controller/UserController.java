@@ -14,10 +14,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @RestController
-@RequestMapping("kin-api")
+@RequestMapping("kin-api") // IDENTIFIER BUAT ENDPOINT -> http://localhost:8080/kin-api/add-user
 @RequiredArgsConstructor
 public class UserController {
-    private final UserService userService;
+    private final UserService userService; // CONTROLLER CUMA CONNECT SM SERVICE
 
     @PostMapping("/add-user")
     public ResponseEntity<BaseResponse> addUser(

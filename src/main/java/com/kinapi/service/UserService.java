@@ -22,6 +22,8 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 @RequiredArgsConstructor
 public class UserService {
+    // ENTITY, REPOSITORY, SERVICE, DTO/CONTROLLER
+    // SERVICE BISA CONNECT KE SERVICE LAIN DAN BISA CONNECT KE REPOSITORY
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
