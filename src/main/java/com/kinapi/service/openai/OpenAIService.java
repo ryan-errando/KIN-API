@@ -367,7 +367,7 @@ public class OpenAIService {
 
                 Please provide a response in the following format:
 
-                1. A brief narrative (1 short paragraph, max. 3 sentences) that:
+                1. A brief narrative (1 short paragraph, max. 2 sentences) that:
                    - Summarizes the overall emotional landscape of the family, keep it concise
                    - Shows empathy and validates each person's experience
                    - Notes both celebrations and challenges
