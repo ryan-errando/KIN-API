@@ -367,23 +367,29 @@ public class OpenAIService {
 
                 Please provide a response in the following format:
 
-                1. A brief narrative (1-2 short paragraphs) that:
-                   - Summarizes the overall emotional landscape of the family
-                   - Highlights key themes or patterns
+                1. A brief narrative (1 short paragraph, max. 3 sentences) that:
+                   - Summarizes the overall emotional landscape of the family, keep it concise
                    - Shows empathy and validates each person's experience
                    - Notes both celebrations and challenges
                    - Feels warm, supportive, and authentic
 
-                2. A "What We Can Do" section with 3-5 specific, actionable suggestions that:
+                2. A "What We Can Do" section with 3 actionable suggestions(max 1 sentence each) that:
                    - Help family members support each other
                    - Address identified needs or challenges
                    - Encourage connection and bonding
                    - Are practical and achievable
-                   - Are presented as bullet points
 
                 Keep the tone warm, empathetic, and encouraging. Focus on building family connection and mutual support.
                 Do not use any markdown formatting like bold (**) or headers (###). Use simple text with bullet points (•) for the action items.
-                Do not include a title or heading at the top. Start directly with the narrative.
+                Do not include a title or heading at the top. Start directly with the narrative. Refer to the family with "All of you / Each of you"
+                Output Format: 
+                Summary : 
+                /*summary*/
+                
+                Suggestions : 
+                • /*suggestion1*/
+                • /*suggestion2*/
+                • /*suggestion3*/
                 """);
 
         String prompt = promptBuilder.toString();
