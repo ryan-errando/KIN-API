@@ -45,5 +45,7 @@ public class FamilyGroupDetailDto implements Serializable {
         private String role;
         @JsonProperty("group_creator")
         private Boolean groupCreator;
+        @JsonProperty("avatar_url")
+        private String avatarUrl;
     }
 }

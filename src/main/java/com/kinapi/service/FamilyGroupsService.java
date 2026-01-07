@@ -96,6 +96,7 @@ public class FamilyGroupsService {
                             .dob(item.getUser().getDob().toString())
                             .role(item.getRole())
                             .groupCreator(ObjectUtils.isEmpty(item.getUser().getFamilyGroups()) ? false : true)
+                            .avatarUrl(item.getUser().getAvatarUrl())
                             .build()
             );
         }
