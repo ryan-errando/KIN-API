@@ -36,7 +36,7 @@ public class DailyQuestionResponseController {
         return new ResponseEntity<>(response, response.code());
     }
 
-    @PutMapping("/edit-daily-question-response")
+    @PatchMapping("/edit-daily-question-response")
     public ResponseEntity<BaseResponse> editDailyQuestionResponse(
             @Valid @RequestBody UpdateDailyQuestionResponseDto updateDailyQuestionResponseDto
     ) {

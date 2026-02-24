@@ -39,7 +39,7 @@ public class CalendarEventsController {
         return new ResponseEntity<>(response, response.code());
     }
 
-    @PutMapping("/update-event")
+    @PatchMapping("/update-event")
     public ResponseEntity<BaseResponse> updateCalendarEvent(
             @Valid @RequestBody UpdateCalendarEventsDto updateCalendarEventsDto
     ){

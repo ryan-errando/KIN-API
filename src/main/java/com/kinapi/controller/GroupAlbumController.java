@@ -33,7 +33,7 @@ public class GroupAlbumController {
         return new ResponseEntity<>(response, response.code());
     }
 
-    @PutMapping("/edit-group-album")
+    @PatchMapping("/edit-group-album")
     public ResponseEntity<BaseResponse> editAlbum(
             @RequestBody EditFamilyGroupAlbumDto editFamilyGroupAlbumDto
     ){

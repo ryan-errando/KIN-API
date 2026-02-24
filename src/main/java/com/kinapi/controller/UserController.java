@@ -47,7 +47,7 @@ public class UserController {
         return new ResponseEntity<>(response, response.code());
     }
 
-    @PutMapping("/edit-profile")
+    @PatchMapping("/edit-profile")
     public ResponseEntity<BaseResponse> editProfile(
             @Valid @RequestBody UpdateUserProfileDto updateUserProfileDto
     ) {
