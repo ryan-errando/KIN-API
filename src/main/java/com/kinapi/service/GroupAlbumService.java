@@ -1,6 +1,5 @@
 package com.kinapi.service;
 
-import com.kinapi.common.dto.AlbumPhotosDto;
 import com.kinapi.common.dto.EditFamilyGroupAlbumDto;
 import com.kinapi.common.dto.FamilyGroupAlbumDto;
 import com.kinapi.common.entity.AlbumPhoto;
@@ -17,9 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -107,148 +104,6 @@ public class GroupAlbumService {
                     .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .code(HttpStatus.INTERNAL_SERVER_ERROR)
                     .message("Error editing group album: " + e.getMessage())
-                    .build();
-        }
-    }
-
-    @Transactional(rollbackFor = Exception.class)
-    public BaseResponse uploadPhotosToAlbum(UUID albumId, MultipartFile[] files) {
-        try {
-            Users user = UserAuthHelper.getUser();
-            FamilyGroups familyGroup = user.getFamilyMembers().getGroup();
-
-            GroupAlbum groupAlbum = groupAlbumRepository.findById(albumId)
-                    .orElseThrow(() -> new Exception("Album not found"));
-
-            log.info("[uploadPhotosToAlbum] Uploading {} files to album: {}", files.length, albumId);
-
-            List<AlbumPhoto> uploadedPhotos = new ArrayList<>();
-
-            for (MultipartFile file : files) {
-                try {
-                    // Upload file to Supabase Storage
-                    String fileUrl = storageService.uploadGalleryAlbumFile(file, familyGroup.getId(), albumId);
-
-                    // Create AlbumPhoto record
-                    AlbumPhoto albumPhoto = AlbumPhoto.builder()
-                            .groupAlbum(groupAlbum)
-                            .fileUrl(fileUrl)
-                            .uploadedBy(user.getName())
-                            .build();
-
-                    albumPhotoRepository.save(albumPhoto);
-                    uploadedPhotos.add(albumPhoto);
-
-                    log.info("[uploadPhotosToAlbum] Successfully uploaded file: {}", fileUrl);
-                } catch (Exception e) {
-                    log.error("[uploadPhotosToAlbum] Failed to upload file: {}", file.getOriginalFilename(), e);
-                }
-            }
-
-            log.info("[uploadPhotosToAlbum] Successfully uploaded {} out of {} files", uploadedPhotos.size(), files.length);
-
-            return BaseResponse.builder()
-                    .status(HttpStatus.OK.value())
-                    .code(HttpStatus.OK)
-                    .message(String.format("Successfully uploaded %d out of %d files", uploadedPhotos.size(), files.length))
-                    .data(uploadedPhotos.stream()
-                            .map(photo -> photo.getFileUrl())
-                            .toList())
-                    .build();
-
-        } catch (Exception e) {
-            log.error("[uploadPhotosToAlbum] Error uploading photos to album", e);
-            return BaseResponse.builder()
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .code(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .message("Error uploading photos: " + e.getMessage())
-                    .build();
-        }
-    }
-
-    public BaseResponse getAlbumPhotos(UUID id) {
-        try {
-            GroupAlbum groupAlbum = groupAlbumRepository.findById(id)
-                    .orElseThrow(() -> new Exception("Album not found"));
-
-            log.info("[getAlbumPhotos] Retrieving photos for album: {}", id);
-
-            List<AlbumPhoto> albumPhotos = albumPhotoRepository.findByGroupAlbum_IdOrderByCreatedAtDesc(id);
-
-            List<AlbumPhotosDto> response = albumPhotos.stream()
-                    .filter(Objects::nonNull)
-                    .map(p -> AlbumPhotosDto.builder()
-                            .photoId(p.getId())
-                            .fileUrl(p.getFileUrl())
-                            .uploadedBy(p.getUploadedBy())
-                            .createdAt(p.getCreatedAt())
-                            .build()
-                    ).toList();
-
-            log.info("[getAlbumPhotos] Found {} photos in album: {}", response.size(), id);
-
-            return BaseResponse.builder()
-                    .status(HttpStatus.OK.value())
-                    .code(HttpStatus.OK)
-                    .message(String.format("Successfully retrieved %d photos from album '%s'",
-                            response.size(), groupAlbum.getAlbumName()))
-                    .data(response)
-                    .build();
-
-        } catch (Exception e) {
-            log.error("[getAlbumPhotos] Error retrieving photos for album: {}", id, e);
-            return BaseResponse.builder()
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .code(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .message("Error retrieving album photos: " + e.getMessage())
-                    .build();
-        }
-    }
-
-    @Transactional(rollbackFor = Exception.class)
-    public BaseResponse deleteAlbumPhotos(List<UUID> photoIds) {
-        try {
-            log.info("[deleteAlbumPhotos] Deleting {} photos", photoIds.size());
-
-            int successCount = 0;
-            int failCount = 0;
-
-            for (UUID photoId : photoIds) {
-                try {
-                    AlbumPhoto albumPhoto = albumPhotoRepository.findById(photoId)
-                            .orElseThrow(() -> new Exception("Photo not found: " + photoId));
-
-                    String fileUrl = albumPhoto.getFileUrl();
-
-                    // Delete file from Supabase Storage
-                    storageService.deleteGalleryAlbumFile(fileUrl);
-
-                    // Delete record from database
-                    albumPhotoRepository.delete(albumPhoto);
-
-                    successCount++;
-                    log.info("[deleteAlbumPhotos] Successfully deleted photo: {}", photoId);
-
-                } catch (Exception e) {
-                    failCount++;
-                    log.error("[deleteAlbumPhotos] Failed to delete photo: {}", photoId, e);
-                }
-            }
-
-            log.info("[deleteAlbumPhotos] Deletion complete: {} succeeded, {} failed", successCount, failCount);
-
-            return BaseResponse.builder()
-                    .status(HttpStatus.OK.value())
-                    .code(HttpStatus.OK)
-                    .message(String.format("Successfully deleted %d out of %d photos", successCount, photoIds.size()))
-                    .build();
-
-        } catch (Exception e) {
-            log.error("[deleteAlbumPhotos] Error deleting photos", e);
-            return BaseResponse.builder()
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .code(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .message("Error deleting photos: " + e.getMessage())
                     .build();
         }
     }
